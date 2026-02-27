@@ -40,7 +40,7 @@ jobs:
       run: tool/action_build.bat
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Debug APK
         path: UndertaleModToolAvalonia.Android\bin\Any CPU\Debug\net9.0-android\output.merged.apk
