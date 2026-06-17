@@ -294,6 +294,9 @@
   <data name="English" xml:space="preserve">
     <value>英文</value>
   </data>
+  <data name="Japanese" xml:space="preserve">
+    <value>日文</value>
+  </data>
   <data name="User_Interface" xml:space="preserve">
     <value>用户界面</value>
   </data>

@@ -154,16 +154,83 @@ public partial class SettingsFile
         Dark = 2,
     }
 
-    public enum LanguageValue
+    /// <summary>
+    /// Represents a supported language with its culture code and native display name.
+    /// </summary>
+    public class LanguageInfo
     {
-        AutoDetect = 0,
-        Zh = 1,
-        En = 2
+        public string Code { get; }
+        public string NativeName { get; }
+
+        public LanguageInfo(string code, string nativeName)
+        {
+            Code = code;
+            NativeName = nativeName;
+        }
     }
+
+    /// <summary>
+    /// Supported languages with their culture code and display name.
+    /// To add a new language: 1) Add entry here, 2) Create Strings.{code}.resx, 3) Add it to csproj.
+    /// </summary>
+    public static readonly LanguageInfo[] SupportedLanguages =
+    [
+        new("", "Auto Detect"),   // auto detect - uses system culture
+        new("zh", "简体中文"),
+        new("en", "English"),
+        new("ja", "日本語"),
+    ];
 
     [Notify] private ThemeValue _Theme;
 
-    [Notify] private LanguageValue _Language;
+    [Notify] private string _LanguageCode = ""; // empty = auto detect
+
+    /// <summary>
+    /// Legacy property for backward compatibility with old Settings.json files.
+    /// Old format: Language (int enum: 0=AutoDetect, 1=Zh, 2=En)
+    /// New format: LanguageCode (string: "", "zh", "en", "ja", etc.)
+    /// When deserializing, if LanguageCode is empty but Language has a value, it migrates.
+    /// </summary>
+    public int? Language
+    {
+        get => null; // Always return null so it's not serialized anymore
+        set
+        {
+            if (value.HasValue && string.IsNullOrEmpty(LanguageCode))
+            {
+                LanguageCode = value.Value switch
+                {
+                    1 => "zh",
+                    2 => "en",
+                    _ => ""
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Index into SupportedLanguages array, for ComboBox binding.
+    /// Syncs with LanguageCode bidirectionally.
+    /// </summary>
+    public int LanguageIndex
+    {
+        get
+        {
+            for (int i = 0; i < SupportedLanguages.Length; i++)
+            {
+                if (SupportedLanguages[i].Code == LanguageCode)
+                    return i;
+            }
+            return 0; // default to auto detect
+        }
+        set
+        {
+            if (value >= 0 && value < SupportedLanguages.Length)
+            {
+                LanguageCode = SupportedLanguages[value].Code;
+            }
+        }
+    }
 
     void OnThemeChanged()
     {
@@ -183,23 +250,26 @@ public partial class SettingsFile
     {
         if (App.Current is not null)
         {
-            CultureInfo culture = getCultureInfoFromSetting();
+            CultureInfo culture = GetCultureInfoFromSetting();
             Thread.CurrentThread.CurrentUICulture = Assets.Strings.Culture = culture;
             SemiTheme.OverrideLocaleResources(Application.Current, culture);
-            //Console.WriteLine(culture);
             Save();
         }
     }
 
-    public CultureInfo getCultureInfoFromSetting()
+    public CultureInfo GetCultureInfoFromSetting()
     {
-        return Language switch
+        if (string.IsNullOrEmpty(LanguageCode))
+            return Thread.CurrentThread.CurrentCulture;
+
+        try
         {
-            LanguageValue.AutoDetect => Thread.CurrentThread.CurrentCulture,
-            LanguageValue.Zh => new CultureInfo("zh", false),
-            LanguageValue.En => new CultureInfo("en", false),
-            _ => Thread.CurrentThread.CurrentCulture,
-        };
+            return new CultureInfo(LanguageCode, false);
+        }
+        catch (CultureNotFoundException)
+        {
+            return Thread.CurrentThread.CurrentCulture;
+        }
     }
 
     public bool OpenNewResourceAfterCreatingIt { get; set; } = false;

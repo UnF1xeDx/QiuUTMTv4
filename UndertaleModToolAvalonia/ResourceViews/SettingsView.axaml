@@ -15,12 +15,15 @@
 
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
                 <Label Content="{x:Static assets:Strings.Language__Restart_to_apply}"/>
-                <ComboBox SelectedIndex="{Binding MainVM.Settings.Language}">
-                    <ComboBoxItem Content="{x:Static assets:Strings.Auto_Detect}" />
-                    <ComboBoxItem Content="简体中文" />
-                    <ComboBoxItem Content="English" />
+                <ComboBox ItemsSource="{x:Static l:SettingsFile.SupportedLanguages}"
+                          SelectedIndex="{Binding MainVM.Settings.LanguageIndex}"
+                          x:DataType="l:SettingsViewModel">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="l:SettingsFile+LanguageInfo">
+                            <TextBlock Text="{Binding NativeName}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
-                
             </Grid>
             
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">

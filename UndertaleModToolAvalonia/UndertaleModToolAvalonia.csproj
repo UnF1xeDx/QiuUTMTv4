@@ -23,6 +23,8 @@
         </EmbeddedResource>
         <EmbeddedResource Update="Assets\Strings.zh.resx">
         </EmbeddedResource>
+        <EmbeddedResource Update="Assets\Strings.ja.resx">
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -86,6 +88,8 @@
         <LastGenOutput>Strings.Designer.cs</LastGenOutput>
       </AvaloniaResource>
       <AvaloniaResource Update="Assets\Strings.zh.resx">
+      </AvaloniaResource>
+      <AvaloniaResource Update="Assets\Strings.ja.resx">
       </AvaloniaResource>
     </ItemGroup>
 

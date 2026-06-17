@@ -25,7 +25,7 @@ public partial class App : Application
         SettingsFile settings = SettingsFile.LoadWithoutMainVM();
         if (settings != null)
         {
-            Thread.CurrentThread.CurrentUICulture = Assets.Strings.Culture = settings.getCultureInfoFromSetting();
+            Thread.CurrentThread.CurrentUICulture = Assets.Strings.Culture = settings.GetCultureInfoFromSetting();
         }
         if (OperatingSystem.IsAndroid())
         {

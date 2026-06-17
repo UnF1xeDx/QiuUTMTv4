@@ -1,0 +1,894 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TitleText" xml:space="preserve">
+    <value>QiuUTMTv4 - 秋冥</value>
+  </data>
+  <data name="FileText" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="NewFileText" xml:space="preserve">
+    <value>新規</value>
+  </data>
+  <data name="OpenFileText" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="SaveFileText" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="CloseFileText" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="SettingsText" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SettingsHeading" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="QuitText" xml:space="preserve">
+    <value>終了</value>
+  </data>
+  <data name="ToolText" xml:space="preserve">
+    <value>ツール</value>
+  </data>
+  <data name="SearchCodeText" xml:space="preserve">
+    <value>コード検索</value>
+  </data>
+  <data name="ScriptText" xml:space="preserve">
+    <value>スクリプト</value>
+  </data>
+  <data name="InnerScriptText" xml:space="preserve">
+    <value>内蔵スクリプト</value>
+  </data>
+  <data name="ChooseScriptToRunText" xml:space="preserve">
+    <value>実行するスクリプトを選択…</value>
+  </data>
+  <data name="HelpText" xml:space="preserve">
+    <value>ヘルプ</value>
+  </data>
+  <data name="DonateText" xml:space="preserve">
+    <value>寄付</value>
+  </data>
+  <data name="QQGroupText" xml:space="preserve">
+    <value>QQグループ…</value>
+  </data>
+  <data name="BilibiliText" xml:space="preserve">
+    <value>ビリビリ…</value>
+  </data>
+  <data name="AboutText" xml:space="preserve">
+    <value>バージョン情報</value>
+  </data>
+  <data name="GithubText" xml:space="preserve">
+    <value>Github…</value>
+  </data>
+  <data name="FilterByCodeText" xml:space="preserve">
+    <value>名前でフィルタ…</value>
+  </data>
+  <data name="CloseTabText" xml:space="preserve">
+    <value>タブを閉じる</value>
+  </data>
+  <data name="GeneralInfoTabHeading" xml:space="preserve">
+    <value>一般情報</value>
+  </data>
+  <data name="GlobalInitScriptsHeading" xml:space="preserve">
+    <value>グローバル初期化スクリプト</value>
+  </data>
+  <data name="GameEndScriptsHeading" xml:space="preserve">
+    <value>ゲーム終了スクリプト</value>
+  </data>
+  <data name="SearchInCodeHeading" xml:space="preserve">
+    <value>コード内検索</value>
+  </data>
+  <data name="UndertaleAudioGroupViewModelHeading" xml:space="preserve">
+    <value>オーディオグループ - {0}</value>
+  </data>
+  <data name="UndertaleSoundViewModelHeading" xml:space="preserve">
+    <value>サウンド - {0}</value>
+  </data>
+  <data name="UndertaleSpriteViewModelHeading" xml:space="preserve">
+    <value>スプライト - {0}</value>
+  </data>
+  <data name="UndertaleBackgroundViewModelHeading" xml:space="preserve">
+    <value>背景 - {0}</value>
+  </data>
+  <data name="UndertalePathViewModelHeading" xml:space="preserve">
+    <value>パス - {0}</value>
+  </data>
+  <data name="UndertaleScriptViewModelHeading" xml:space="preserve">
+    <value>スクリプト - {0}</value>
+  </data>
+  <data name="UndertaleShaderViewModelHeading" xml:space="preserve">
+    <value>シェーダー - {0}</value>
+  </data>
+  <data name="UndertaleFontViewModelHeading" xml:space="preserve">
+    <value>フォント - {0}</value>
+  </data>
+  <data name="UndertaleTimelineViewModelHeading" xml:space="preserve">
+    <value>タイムライン - {0}</value>
+  </data>
+  <data name="Game_object____0" xml:space="preserve">
+    <value>ゲームオブジェクト - {0}</value>
+  </data>
+  <data name="Room____0" xml:space="preserve">
+    <value>ルーム - {0}</value>
+  </data>
+  <data name="Extension____0" xml:space="preserve">
+    <value>拡張 - {0}}</value>
+  </data>
+  <data name="Texture_page_item____0" xml:space="preserve">
+    <value>テクスチャページアイテム - {0}</value>
+  </data>
+  <data name="Code____0" xml:space="preserve">
+    <value>コード - {0}</value>
+  </data>
+  <data name="Variable____0" xml:space="preserve">
+    <value>変数 - {0}</value>
+  </data>
+  <data name="Function____0" xml:space="preserve">
+    <value>関数 - {0}</value>
+  </data>
+  <data name="Code_locals____0" xml:space="preserve">
+    <value>コードローカル - {0}</value>
+  </data>
+  <data name="String____0" xml:space="preserve">
+    <value>文字列 - {0}</value>
+  </data>
+  <data name="Embedded_texture____0" xml:space="preserve">
+    <value>埋め込みテクスチャ - {0}</value>
+  </data>
+  <data name="Embedded_audio____0" xml:space="preserve">
+    <value>埋め込みオーディオ - {0}</value>
+  </data>
+  <data name="Texture_group_information____0" xml:space="preserve">
+    <value>テクスチャグループ情報 - {0}</value>
+  </data>
+  <data name="Embedded_image____0" xml:space="preserve">
+    <value>埋め込み画像 - {0}</value>
+  </data>
+  <data name="Particle_system____0" xml:space="preserve">
+    <value>パーティクルシステム - {0}</value>
+  </data>
+  <data name="Particle_system_emitter____0" xml:space="preserve">
+    <value>パーティクルシステムエミッタ - {0}</value>
+  </data>
+  <data name="Donate" xml:space="preserve">
+    <value>寄付</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>はい</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>いいえ</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Language__Restart_to_apply" xml:space="preserve">
+    <value>🌏言語（再起動が必要）:</value>
+  </data>
+  <data name="Auto_Detect" xml:space="preserve">
+    <value>自動検出</value>
+  </data>
+  <data name="Chinese" xml:space="preserve">
+    <value>中国語</value>
+  </data>
+  <data name="English" xml:space="preserve">
+    <value>英語</value>
+  </data>
+  <data name="Japanese" xml:space="preserve">
+    <value>日本語</value>
+  </data>
+  <data name="User_Interface" xml:space="preserve">
+    <value>ユーザーインターフェース</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>テーマ:</value>
+  </data>
+  <data name="Follow_System" xml:space="preserve">
+    <value>システムに従う</value>
+  </data>
+  <data name="Light" xml:space="preserve">
+    <value>ライト</value>
+  </data>
+  <data name="Dark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="OpenNewResourceAfterCreatingIt" xml:space="preserve">
+    <value>作成後に新しいリソースを開く</value>
+  </data>
+  <data name="Enable_syntax_highlighting" xml:space="preserve">
+    <value>構文ハイライトを有効にする</value>
+  </data>
+  <data name="Automatically_compile_and_decompile" xml:space="preserve">
+    <value>フォーカスを失った時に自動的にコンパイル・デコンパイルする</value>
+  </data>
+  <data name="EnableRoomGridByDefault" xml:space="preserve">
+    <value>デフォルトでルームグリッドを有効にする</value>
+  </data>
+  <data name="DefaultRoomGridSize" xml:space="preserve">
+    <value>デフォルトのルームグリッドサイズ</value>
+  </data>
+  <data name="Script_Execution" xml:space="preserve">
+    <value>スクリプト実行</value>
+  </data>
+  <data name="Use_QiuUTMTv3_Script_Engine_to_execute" xml:space="preserve">
+    <value>QiuUTMTv3スクリプトエンジンを使用（推奨、Androidのみ動作）</value>
+  </data>
+  <data name="Use_CSS_hex_color_literals" xml:space="preserve">
+    <value>CSS16進数カラーリテラルを使用</value>
+  </data>
+  <data name="Always_use_semicolons" xml:space="preserve">
+    <value>常にセミコロンを使用</value>
+  </data>
+  <data name="Open_block_braces_on_same_line" xml:space="preserve">
+    <value>ブロックの開き波括弧を同じ行に配置</value>
+  </data>
+  <data name="Create_enum_declarations" xml:space="preserve">
+    <value>列挙型宣言を作成</value>
+  </data>
+  <data name="Print_warnings" xml:space="preserve">
+    <value>警告を表示</value>
+  </data>
+  <data name="Named_instance_ID_prefix" xml:space="preserve">
+    <value>名前付きインスタンスIDプレフィクス:</value>
+  </data>
+  <data name="If_enabled__color_constants_can_be" xml:space="preserve">
+    <value>有効にすると、カラー定数を#RRGGBBの16進数形式でフォーマットします。</value>
+  </data>
+  <data name="If_enabled__all_statements_that_can" xml:space="preserve">
+    <value>有効にすると、セミコロンを使用できるすべてのステートメントにセミコロンが付きます。</value>
+  </data>
+  <data name="If_enabled__the_curly_braces_used" xml:space="preserve">
+    <value>有効にすると、ブロックを開く波括弧がそれが属するステートメントと同じ行に配置されます。</value>
+  </data>
+  <data name="If_enabled__enum_declarations_identified" xml:space="preserve">
+    <value>有効にすると、デコンパイル中に識別された列挙型宣言が常にデコンパイル出力に表示されます。</value>
+  </data>
+  <data name="If_enabled__warnings_generated_during" xml:space="preserve">
+    <value>有効にすると、デコンパイル中に生成された警告がコメントとして出力されます。</value>
+  </data>
+  <data name="Prefix_used_for_named_instance_IDs" xml:space="preserve">
+    <value>デコンパイラが名前付きインスタンスIDを見つけた時に使用するプレフィクス。変数名と競合する場合は変更してください。</value>
+  </data>
+  <data name="Indent_string" xml:space="preserve">
+    <value>インデント文字列:</value>
+  </data>
+  <data name="Remove_block_braces_if_single_line" xml:space="preserve">
+    <value>単一行の場合、ブロックの波括弧を削除</value>
+  </data>
+  <data name="If_enabled__blocks_that_contain_a" xml:space="preserve">
+    <value>有効にすると、単一行を含むブロックは可能な場合波括弧が削除されます。if/elseチェーンの場合、すべてのブロックが単一行である必要があります。</value>
+  </data>
+  <data name="Enum_macro_declarations_at_top_of" xml:space="preserve">
+    <value>コード先頭に列挙型/マクロ宣言を配置</value>
+  </data>
+  <data name="If_enabled__enums_and_macros_will" xml:space="preserve">
+    <value>有効にすると、列挙型とマクロがデコンパイル出力の先頭（上部）に表示されます。</value>
+  </data>
+  <data name="Allow_leftover_data_on_VM_stack" xml:space="preserve">
+    <value>VMスタックに残余データを許可</value>
+  </data>
+  <data name="If_enabled__data_left_over_on_the" xml:space="preserve">
+    <value>有効にすると、VMスタックに残ったデータはエラーではなく警告として扱われます。</value>
+  </data>
+  <data name="Add_empty_lines" xml:space="preserve">
+    <value>空行を追加:</value>
+  </data>
+  <data name="Select_specific_syntax_to_add_empty" xml:space="preserve">
+    <value>空行を追加する前後の特定の構文を選択します。</value>
+  </data>
+  <data name="Around_branch_statements" xml:space="preserve">
+    <value>分岐ステートメントの前後</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_before" xml:space="preserve">
+    <value>有効にすると、分岐ステートメントの前後に空行が追加されます。</value>
+  </data>
+  <data name="Before_switch_cases" xml:space="preserve">
+    <value>switch caseの前</value>
+  </data>
+  <data name="Around_function_declarations" xml:space="preserve">
+    <value>関数宣言の前後</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_before1" xml:space="preserve">
+    <value>有効にすると、switchステートメントの"case"エントリ（チェーン）の前に空行が追加されます。</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_before2" xml:space="preserve">
+    <value>有効にすると、匿名関数を含む関数宣言の前後に空行が追加されます。</value>
+  </data>
+  <data name="After_local_variable_declarations" xml:space="preserve">
+    <value>ローカル変数宣言の後</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_after" xml:space="preserve">
+    <value>有効にすると、ブロックスコープのローカル変数宣言の後に空行が追加されます。</value>
+  </data>
+  <data name="After_switch_cases" xml:space="preserve">
+    <value>switch caseの後</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_after1" xml:space="preserve">
+    <value>有効にすると、switchステートメントの"case"エントリ（チェーン）の後に空行が追加されます。</value>
+  </data>
+  <data name="Around_static_initialization" xml:space="preserve">
+    <value>静的初期化の前後</value>
+  </data>
+  <data name="If_enabled__adds_an_empty_line_before3" xml:space="preserve">
+    <value>有効にすると、静的初期化の前後に空行が追加され、連続する静的初期化がグループ化されます。</value>
+  </data>
+  <data name="Perform_cleanups" xml:space="preserve">
+    <value>クリーンアップを実行:</value>
+  </data>
+  <data name="Select_specific_cleanup_operations" xml:space="preserve">
+    <value>デコンパイラが実行する特定のクリーンアップ操作を選択します。これらを無効にするとコードが見にくくなる可能性がありますが、基礎となるロジックを確認できます。</value>
+  </data>
+  <data name="Try_catch_finally_rewriting" xml:space="preserve">
+    <value>try/catch/finallyの書き換え</value>
+  </data>
+  <data name="If_enabled__compiler_generated_code" xml:space="preserve">
+    <value>有効にすると、try/catch/finallyステートメントのコンパイラ生成コードとロジックが元のコードに近い形に書き換えられます。</value>
+  </data>
+  <data name="Default_argument_values" xml:space="preserve">
+    <value>デフォルト引数値</value>
+  </data>
+  <data name="If_enabled__syntax_for_default_named" xml:space="preserve">
+    <value>有効にすると、デフォルトの名前付き関数引数の構文が使用されます。</value>
+  </data>
+  <data name="Scope_local_variable_declarations" xml:space="preserve">
+    <value>ローカル変数宣言のスコープ化</value>
+  </data>
+  <data name="If_enabled__local_variable_declarations" xml:space="preserve">
+    <value>有効にすると、ローカル変数宣言がコード内の使用に基づいて検出されたスコープに配置されます。</value>
+  </data>
+  <data name="Transform_else_into_continue" xml:space="preserve">
+    <value>elseをcontinueに変換</value>
+  </data>
+  <data name="If_enabled__certain_usages_of__quot" xml:space="preserve">
+    <value>有効にすると、ループ内の"else"の特定の使用が"continue"ステートメントに変換され、コードが読みやすくなります。</value>
+  </data>
+  <data name="If_enabled__certain_builtin_globals" xml:space="preserve">
+    <value>有効にすると、特定の組み込みグローバル変数が配列アクセサなしで使用されている場合、コンパイラ生成構文ではなくそのまま出力されます。</value>
+  </data>
+  <data name="Builtin_array_variable_syntax" xml:space="preserve">
+    <value>組み込み配列変数構文</value>
+  </data>
+  <data name="Thank_you_for_donation" xml:space="preserve">
+    <value>ご寄付ありがとうございます！</value>
+  </data>
+  <data name="Script" xml:space="preserve">
+    <value>スクリプト</value>
+  </data>
+  <data name="General_info" xml:space="preserve">
+    <value>一般情報</value>
+  </data>
+  <data name="Disable_GMS_debugger" xml:space="preserve">
+    <value>GMSデバッガを無効化</value>
+  </data>
+  <data name="Bytecode_version" xml:space="preserve">
+    <value>バイトコードバージョン</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>ファイル名</value>
+  </data>
+  <data name="Config" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Last_object_ID" xml:space="preserve">
+    <value>最後のオブジェクトID</value>
+  </data>
+  <data name="Last_tile_ID" xml:space="preserve">
+    <value>最後のタイルID</value>
+  </data>
+  <data name="Game_ID" xml:space="preserve">
+    <value>ゲームID</value>
+  </data>
+  <data name="DirectPlay_GUID" xml:space="preserve">
+    <value>DirectPlay GUID</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="Default_window_size" xml:space="preserve">
+    <value>デフォルトウィンドウサイズ</value>
+  </data>
+  <data name="Flags" xml:space="preserve">
+    <value>フラグ</value>
+  </data>
+  <data name="License_MD5" xml:space="preserve">
+    <value>ライセンス MD5</value>
+  </data>
+  <data name="License_CRC32" xml:space="preserve">
+    <value>ライセンス CRC32</value>
+  </data>
+  <data name="Timestamp" xml:space="preserve">
+    <value>タイムスタンプ</value>
+  </data>
+  <data name="Display_name" xml:space="preserve">
+    <value>表示名</value>
+  </data>
+  <data name="Active_targets" xml:space="preserve">
+    <value>アクティブターゲット</value>
+  </data>
+  <data name="Function_classifications" xml:space="preserve">
+    <value>関数分類</value>
+  </data>
+  <data name="Steam_AppID" xml:space="preserve">
+    <value>Steam AppID</value>
+  </data>
+  <data name="Debugger_port" xml:space="preserve">
+    <value>デバッガポート</value>
+  </data>
+  <data name="Room_order" xml:space="preserve">
+    <value>ルーム順序</value>
+  </data>
+  <data name="Rooms" xml:space="preserve">
+    <value>ルーム</value>
+  </data>
+  <data name="Room" xml:space="preserve">
+    <value>ルーム</value>
+  </data>
+  <data name="FPS" xml:space="preserve">
+    <value>FPS</value>
+  </data>
+  <data name="Allow_statistics" xml:space="preserve">
+    <value>統計を許可</value>
+  </data>
+  <data name="Game_GUID" xml:space="preserve">
+    <value>ゲーム GUID</value>
+  </data>
+  <data name="Options" xml:space="preserve">
+    <value>オプション</value>
+  </data>
+  <data name="Shader_extension_flag" xml:space="preserve">
+    <value>シェーダー拡張フラグ</value>
+  </data>
+  <data name="Shader_extension_version" xml:space="preserve">
+    <value>シェーダー拡張バージョン</value>
+  </data>
+  <data name="Scale" xml:space="preserve">
+    <value>スケール</value>
+  </data>
+  <data name="Window_color" xml:space="preserve">
+    <value>ウィンドウカラー</value>
+  </data>
+  <data name="Color_depth" xml:space="preserve">
+    <value>色深度</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>解像度</value>
+  </data>
+  <data name="Frequency" xml:space="preserve">
+    <value>周波数</value>
+  </data>
+  <data name="Vertex_sync" xml:space="preserve">
+    <value>頂点同期</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+    <value>優先度</value>
+  </data>
+  <data name="Back_image" xml:space="preserve">
+    <value>背景画像</value>
+  </data>
+  <data name="Front_image" xml:space="preserve">
+    <value>前景画像</value>
+  </data>
+  <data name="Load_image" xml:space="preserve">
+    <value>読み込み画像</value>
+  </data>
+  <data name="Load_alpha" xml:space="preserve">
+    <value>読み込みアルファ</value>
+  </data>
+  <data name="Constants" xml:space="preserve">
+    <value>定数</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>値</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>不明</value>
+  </data>
+  <data name="Language_count" xml:space="preserve">
+    <value>言語数</value>
+  </data>
+  <data name="Entry_count" xml:space="preserve">
+    <value>エントリ数</value>
+  </data>
+  <data name="Case_sensitive" xml:space="preserve">
+    <value>大文字小文字を区別</value>
+  </data>
+  <data name="Regular_search" xml:space="preserve">
+    <value>正規表現を使用</value>
+  </data>
+  <data name="Search_in_Assembly" xml:space="preserve">
+    <value>アセンブリ内を検索</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="Open_in_new_tab" xml:space="preserve">
+    <value>新しいタブで開く</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="Text" xml:space="preserve">
+    <value>テキスト</value>
+  </data>
+  <data name="Path" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="Transparent" xml:space="preserve">
+    <value>透明</value>
+  </data>
+  <data name="Smooth" xml:space="preserve">
+    <value>スムーズ</value>
+  </data>
+  <data name="Preload" xml:space="preserve">
+    <value>プリロード</value>
+  </data>
+  <data name="Texture" xml:space="preserve">
+    <value>テクスチャ</value>
+  </data>
+  <data name="Unknown_Always_2" xml:space="preserve">
+    <value>不明（常に2）</value>
+  </data>
+  <data name="Tile_Width" xml:space="preserve">
+    <value>タイル幅</value>
+  </data>
+  <data name="Tile_Height" xml:space="preserve">
+    <value>タイル高さ</value>
+  </data>
+  <data name="Output_Border_X" xml:space="preserve">
+    <value>出力境界 X</value>
+  </data>
+  <data name="Output_Border_Y" xml:space="preserve">
+    <value>出力境界 Y</value>
+  </data>
+  <data name="Tile_Columns" xml:space="preserve">
+    <value>タイル列数</value>
+  </data>
+  <data name="Items_frames_per_tile" xml:space="preserve">
+    <value>タイルあたりのアイテム/フレーム数</value>
+  </data>
+  <data name="Tile_Count" xml:space="preserve">
+    <value>タイル数</value>
+  </data>
+  <data name="Exported_Sprite_Index" xml:space="preserve">
+    <value>エクスポートされたスプライトインデックス</value>
+  </data>
+  <data name="Frame_Time__microseconds" xml:space="preserve">
+    <value>フレーム時間（マイクロ秒）</value>
+  </data>
+  <data name="Tile_IDs" xml:space="preserve">
+    <value>タイルID</value>
+  </data>
+  <data name="List" xml:space="preserve">
+    <value>リスト</value>
+  </data>
+  <data name="Tile_ID" xml:space="preserve">
+    <value>タイルID</value>
+  </data>
+  <data name="Image" xml:space="preserve">
+    <value>画像</value>
+  </data>
+  <data name="Code_locals" xml:space="preserve">
+    <value>コードローカル</value>
+  </data>
+  <data name="Index" xml:space="preserve">
+    <value>インデックス</value>
+  </data>
+  <data name="ParentCode" xml:space="preserve">
+    <value>親コード</value>
+  </data>
+  <data name="Compile_and_decompile" xml:space="preserve">
+    <value>コンパイルしてデコンパイル</value>
+  </data>
+  <data name="WAV_data__length" xml:space="preserve">
+    <value>WAVデータ, 長�さ: </value>
+  </data>
+  <data name="Save_audio" xml:space="preserve">
+    <value>オーディオを保存</value>
+  </data>
+  <data name="Instance_type" xml:space="preserve">
+    <value>インスタンスタイプ</value>
+  </data>
+  <data name="Name_string_ID" xml:space="preserve">
+    <value>名前文字列ID</value>
+  </data>
+  <data name="VarID" xml:space="preserve">
+    <value>変数ID</value>
+  </data>
+  <data name="Moments" xml:space="preserve">
+    <value>モーメント</value>
+  </data>
+  <data name="Step" xml:space="preserve">
+    <value>ステップ</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>アクション</value>
+  </data>
+  <data name="Code" xml:space="preserve">
+    <value>コード</value>
+  </data>
+  <data name="Source_X_Y_W_H" xml:space="preserve">
+    <value>ソース X/Y/W/H</value>
+  </data>
+  <data name="Target_X_Y_W_H" xml:space="preserve">
+    <value>ターゲット X/Y/W/H</value>
+  </data>
+  <data name="Bounding_size" xml:space="preserve">
+    <value>バウンディングサイズ</value>
+  </data>
+  <data name="Save_image" xml:space="preserve">
+    <value>画像を保存</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>内容</value>
+  </data>
+  <data name="Size_W_H" xml:space="preserve">
+    <value>サイズ W/H</value>
+  </data>
+  <data name="Margin_Left_Right_Bottom_Top" xml:space="preserve">
+    <value>マージン 左/右/下/上</value>
+  </data>
+  <data name="Bounding_box_mode" xml:space="preserve">
+    <value>バウンディングボックスモード</value>
+  </data>
+  <data name="Separation_mask_type" xml:space="preserve">
+    <value>分離マスクタイプ</value>
+  </data>
+  <data name="Origin_X_Y" xml:space="preserve">
+    <value>原点 X/Y</value>
+  </data>
+  <data name="Textures" xml:space="preserve">
+    <value>テクスチャ</value>
+  </data>
+  <data name="Collision_masks" xml:space="preserve">
+    <value>コリジョンマスク</value>
+  </data>
+  <data name="Mask" xml:space="preserve">
+    <value>マスク</value>
+  </data>
+  <data name="Collision_mask_entry" xml:space="preserve">
+    <value>(コリジョンマスクエントリ)</value>
+  </data>
+  <data name="Collision_mask_data" xml:space="preserve">
+    <value>コリジョンマスクデータ</value>
+  </data>
+  <data name="Import_collision_mask_data" xml:space="preserve">
+    <value>コリジョンマスクデータをインポート</value>
+  </data>
+  <data name="Export_collision_mask_data" xml:space="preserve">
+    <value>コリジョンマスクデータをエクスポート</value>
+  </data>
+  <data name="Is_special_type" xml:space="preserve">
+    <value>特殊タイプ</value>
+  </data>
+  <data name="SVersion" xml:space="preserve">
+    <value>バージョン</value>
+  </data>
+  <data name="SType" xml:space="preserve">
+    <value>タイプ</value>
+  </data>
+  <data name="Playback_speed" xml:space="preserve">
+    <value>再生速度</value>
+  </data>
+  <data name="Playback_speed_type" xml:space="preserve">
+    <value>再生速度タイプ</value>
+  </data>
+  <data name="Embedded_textures" xml:space="preserve">
+    <value>埋め込みテクスチャ</value>
+  </data>
+  <data name="Group_name" xml:space="preserve">
+    <value>グループ名</value>
+  </data>
+  <data name="Embedded_texture" xml:space="preserve">
+    <value>埋め込みテクスチャ</value>
+  </data>
+  <data name="Sprites" xml:space="preserve">
+    <value>スプライト</value>
+  </data>
+  <data name="Sprite" xml:space="preserve">
+    <value>スプライト</value>
+  </data>
+  <data name="Spine_sprites" xml:space="preserve">
+    <value>Spineスプライト</value>
+  </data>
+  <data name="Fonts" xml:space="preserve">
+    <value>フォント</value>
+  </data>
+  <data name="Font" xml:space="preserve">
+    <value>フォント</value>
+  </data>
+  <data name="Tilesets" xml:space="preserve">
+    <value>タイルセット</value>
+  </data>
+  <data name="Background" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>インポート</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>エクスポート</value>
+  </data>
+  <data name="a_0__reference" xml:space="preserve">
+    <value>({0} の参照)</value>
+  </data>
+  <data name="UndertaleString_reference" xml:space="preserve">
+    <value>(UndertaleStringの参照)</value>
+  </data>
+  <data name="Find_unused_assets" xml:space="preserve">
+    <value>未使用アセットを検索</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>ようこそ！</value>
+  </data>
+  <data name="Welcome_to_Qiumen_s_special_version" xml:space="preserve">
+    <value>Undertale Mod Toolの秋冥特別バージョンへようこそ！\n\nこのプロジェクトは多くのプロジェクトを基に開発されています。詳細はバージョン情報とソースコードをご覧ください。  Bilibili:@秋冥散雨_GenOuka</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Copy_name" xml:space="preserve">
+    <value>名前をコピー</value>
+  </data>
+  <data name="Swap_position" xml:space="preserve">
+    <value>位置を交換</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Saving" xml:space="preserve">
+    <value>保存中...</value>
+  </data>
+  <data name="Save_before_creating" xml:space="preserve">
+    <value>作成前に保存しますか？</value>
+  </data>
+  <data name="Save_before_opening" xml:space="preserve">
+    <value>開く前に保存しますか？</value>
+  </data>
+  <data name="Save_datafile" xml:space="preserve">
+    <value>データファイルを保存</value>
+  </data>
+  <data name="Save_before_closing" xml:space="preserve">
+    <value>閉じる前に保存しますか？</value>
+  </data>
+  <data name="Run_Script" xml:space="preserve">
+    <value>スクリプトを実行</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>バージョン情報</value>
+  </data>
+  <data name="Code_Editor" xml:space="preserve">
+    <value>コードエディタ</value>
+  </data>
+  <data name="Use_SoraEditor_as_code_editor__Only" xml:space="preserve">
+    <value>SoraEditorをコードエディタとして使用（Android向け）</value>
+  </data>
+</root>
