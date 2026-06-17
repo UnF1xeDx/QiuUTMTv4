@@ -21,7 +21,7 @@ jobs:
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: | 
+        dotnet-version: |
           8.0.x
           9.0.x
 
@@ -34,9 +34,9 @@ jobs:
     - name: Restore the application
       run: msbuild QiuUTMTv4.sln /t:Restore
 
-    - name: Create the app package
-      run: tool/action_build.bat
-      
+    - name: Build fast deployment APK
+      run: tool\action_build.bat
+
     - name: Create Release and Upload Assets
       uses: softprops/action-gh-release@v3
       with:
