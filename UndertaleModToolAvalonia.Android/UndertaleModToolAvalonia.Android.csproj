@@ -36,36 +36,4 @@
     <ProjectReference Include="..\SoraEditor\SoraEditor.csproj" />
     <ProjectReference Include="..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" />
   </ItemGroup>
-
-  <!--
-    Custom target to collect all fast deployment files into a single directory.
-    This ensures all assemblies (including resx-generated DLLs from referenced projects)
-    are properly included in the .__override__ directory for fast deploy APKs.
-  -->
-  <Target Name="_CollectFastDevFiles" AfterTargets="_BuildApkFastDev" Condition=" '$(EmbedAssembliesIntoApk)' != 'True' ">
-    <PropertyGroup>
-      <FastDevOutputDir Condition=" '$(FastDevOutputDir)' == '' ">$(IntermediateOutputPath)fastdev_collected</FastDevOutputDir>
-      <FastDevOverrideDir>$(FastDevOutputDir)\.__override__</FastDevOverrideDir>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(FastDevOverrideDir)" />
-
-    <!-- Framework assemblies (includes all referenced project DLLs like UndertaleModToolAvalonia, QiuLibCore, etc.) -->
-    <Copy SourceFiles="@(_ShrunkFrameworkAssemblies)" DestinationFolder="$(FastDevOverrideDir)" />
-
-    <!-- Native libraries for fast dev -->
-    <Copy SourceFiles="@(_AndroidNativeLibraryForFastDev)" DestinationFolder="$(FastDevOverrideDir)" />
-
-    <!-- DEX files for fast dev -->
-    <Copy SourceFiles="@(_DexFileForFastDev)" DestinationFolder="$(FastDevOverrideDir)" />
-
-    <!-- Type mappings -->
-    <Copy SourceFiles="@(_AndroidTypeMaps)" DestinationFolder="$(FastDevOverrideDir)" />
-
-    <Message Importance="High" Text="Fast dev files collected to: $(FastDevOverrideDir)" />
-    <Message Importance="High" Text="Framework assemblies: @(_ShrunkFrameworkAssemblies->Count()) item(s)" />
-    <Message Importance="High" Text="Native libraries: @(_AndroidNativeLibraryForFastDev->Count()) item(s)" />
-    <Message Importance="High" Text="DEX files: @(_DexFileForFastDev->Count()) item(s)" />
-    <Message Importance="High" Text="Type maps: @(_AndroidTypeMaps->Count()) item(s)" />
-  </Target>
 </Project>

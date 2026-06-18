@@ -12,7 +12,6 @@ set "AndroidObjDir=%AndroidProjectDir%\obj\Any CPU\Debug\net9.0-android"
 set "SignedApk=%AndroidBinDir%\com.genouka.qiuutmtv4-Signed.apk"
 set "OutputApk=%AndroidBinDir%\output.merged.apk"
 set "OverrideDir=%AndroidObjDir%\android\.__override__"
-set "FastDevCollectedDir=%AndroidObjDir%\fastdev_collected"
 set "ClassesDex=%ExecutePath%classes.dex"
 
 :: Prebuild Resources only for github actions because local build will automatically prebuild resources
@@ -38,26 +37,37 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo [3/5] Locating fast deploy files...
-:: The _CollectFastDevFiles target ran during step 2 (AfterTargets="_BuildApkFastDev")
-:: and populated fastdev_collected\.__override__ with all assemblies.
-:: We use that directory directly instead of re-running the target (which would have empty item groups).
-if exist "%FastDevCollectedDir%\.__override__" (
-    set "FastDevSourceDir=%FastDevCollectedDir%"
-    echo Found fast dev files in: %FastDevCollectedDir%\.__override__
-) else if exist "%OverrideDir%" (
-    set "FastDevSourceDir=%AndroidObjDir%\android"
-    echo Found fast dev files in: %OverrideDir%
-) else (
-    echo ERROR: No fast dev files found - neither fastdev_collected nor __override__ directory exists
+:: Use the android\.__override__ directory directly - it has the correct ABI subdirectory
+:: structure (e.g. .__override__\arm64-v8a\*.dll) and contains ALL assemblies
+:: (both framework DLLs and app assemblies like QiuLibCore.dll, UndertaleModToolAvalonia.dll, etc.)
+if not exist "%OverrideDir%" (
+    echo ERROR: __override__ directory not found at: %OverrideDir%
     exit /b 1
+)
+echo Found fast dev files in: %OverrideDir%
+
+:: Copy satellite assemblies (*.resources.dll) from app's bin directory into each ABI subdirectory.
+:: The MAUI fast-deploy mechanism sometimes misses app satellite assemblies
+:: (e.g. Strings.ja.resx -> ja\UndertaleModToolAvalonia.resources.dll).
+set "AppBinDir=%ExecutePath%..\UndertaleModToolAvalonia\bin\Any CPU\Debug\net9.0"
+if exist "%AppBinDir%" (
+    for /d %%A in ("%OverrideDir%\*") do (
+        for /d %%C in ("%AppBinDir%\*") do (
+            if exist "%%C\*.resources.dll" (
+                if not exist "%%A\%%~nxC" mkdir "%%A\%%~nxC" 2>nul
+                copy /y "%%C\*.resources.dll" "%%A\%%~nxC\" >nul 2>&1
+            )
+        )
+    )
+    echo Satellite assemblies copied from app bin to __override__
 )
 
 echo [4/5] Packaging fast deploy files into APK...
 :: Create assets directory for patcher
 mkdir "%ExecutePath%assets" 2>nul
 
-:: Package the fast dev files (.__override__ directory) into genouka_patcher.ext
-"%ExecutePath%7z.exe" a -tzip "%ExecutePath%assets\genouka_patcher.ext" "!FastDevSourceDir!\.__override__"
+:: Package the fast dev files (.__override__ directory, including ABI subdirs) into genouka_patcher.ext
+"%ExecutePath%7z.exe" a -tzip "%ExecutePath%assets\genouka_patcher.ext" "%OverrideDir%"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to create genouka_patcher.ext
     exit /b 1
