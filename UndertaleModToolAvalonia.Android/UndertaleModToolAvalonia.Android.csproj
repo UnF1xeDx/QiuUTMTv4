@@ -9,7 +9,7 @@
     <ApplicationDisplayVersion>4.3</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-    <RuntimeIdentifiers>armeabi-v7a;x86;arm64-v8a;x86_64</RuntimeIdentifiers>
+    <AndroidSupportedAbis>armeabi-v7a;x86;arm64-v8a;x86_64</AndroidSupportedAbis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <AndroidLinkMode>None</AndroidLinkMode>
