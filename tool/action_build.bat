@@ -12,6 +12,7 @@ set "AndroidObjDir=%AndroidProjectDir%\obj\Any CPU\Debug\net9.0-android"
 set "SignedApk=%AndroidBinDir%\com.genouka.qiuutmtv4-Signed.apk"
 set "OutputApk=%AndroidBinDir%\output.merged.apk"
 set "OverrideDir=%AndroidObjDir%\android\.__override__"
+set "AssetsDir=%AndroidObjDir%\android\assets"
 set "ClassesDex=%ExecutePath%classes.dex"
 
 :: Prebuild Resources only for github actions because local build will automatically prebuild resources
@@ -37,14 +38,27 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo [3/5] Locating fast deploy files...
-:: Use the android\.__override__ directory directly - it has the correct ABI subdirectory
-:: structure (e.g. .__override__\arm64-v8a\*.dll) and contains ALL assemblies
-:: (both framework DLLs and app assemblies like QiuLibCore.dll, UndertaleModToolAvalonia.dll, etc.)
-if not exist "%OverrideDir%" (
-    echo ERROR: __override__ directory not found at: %OverrideDir%
+:: Different .NET Android SDK versions produce different directory structures:
+:: - Older SDK: android\.__override__\<abi>\*.dll
+:: - Newer SDK: android\assets\<abi>\*.dll
+:: We need .__override__ as the root name in the zip for the Android runtime.
+set "CreatedJunction=0"
+if exist "%OverrideDir%" (
+    echo Found .__override__ directory: %OverrideDir%
+) else if exist "%AssetsDir%" (
+    echo Found assets directory: %AssetsDir%
+    :: Create a directory junction so the zip root is .__override__ (not assets)
+    mklink /J "%OverrideDir%" "%AssetsDir%"
+    if %ERRORLEVEL% neq 0 (
+        echo ERROR: Failed to create junction from .__override__ to assets
+        exit /b 1
+    )
+    set "CreatedJunction=1"
+    echo Created junction: %OverrideDir% -> %AssetsDir%
+) else (
+    echo ERROR: Neither .__override__ nor assets directory found under %AndroidObjDir%\android
     exit /b 1
 )
-echo Found fast dev files in: %OverrideDir%
 
 :: Copy satellite assemblies (*.resources.dll) from app's bin directory into each ABI subdirectory.
 :: The MAUI fast-deploy mechanism sometimes misses app satellite assemblies
@@ -70,14 +84,14 @@ mkdir "%ExecutePath%assets" 2>nul
 "%ExecutePath%7z.exe" a -tzip "%ExecutePath%assets\genouka_patcher.ext" "%OverrideDir%"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to create genouka_patcher.ext
-    exit /b 1
+    goto :error_exit
 )
 
 :: Add assets into the signed APK
 "%ExecutePath%7z.exe" a -tzip "%SignedApk%" "%ExecutePath%assets" -aoa
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to add assets to APK
-    exit /b 1
+    goto :error_exit
 )
 
 :: Clean up temp assets
@@ -88,7 +102,7 @@ rmdir /s /q "%ExecutePath%assets"
 "%ExecutePath%7z.exe" a -tzip "%SignedApk%" "%ClassesDex%" -aoa
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to add classes.dex to APK
-    exit /b 1
+    goto :error_exit
 )
 
 echo [5/5] Signing APK...
@@ -96,8 +110,24 @@ del /q /f "%OutputApk%" 2>nul
 "%ExecutePath%signapk.exe" sign --ks "%ExecutePath%debug.keystore" --ks-key-alias "androiddebugkey" --ks-pass "pass:android" --key-pass "pass:android" --in "%SignedApk%" --out "%OutputApk%"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to sign APK
-    exit /b 1
+    goto :error_exit
 )
 
 echo Build completed successfully: %OutputApk%
+
+:: Clean up junction if we created it
+if "!CreatedJunction!"=="1" (
+    rmdir "%OverrideDir%" 2>nul
+    echo Removed junction: %OverrideDir%
+)
+
 endlocal
+exit /b 0
+
+:error_exit
+:: Clean up junction on error
+if "!CreatedJunction!"=="1" (
+    rmdir "%OverrideDir%" 2>nul
+)
+endlocal
+exit /b 1
