@@ -17,7 +17,7 @@ if (!ScriptQuestion("Visual glitches are very likely to occur in game. Do you ac
     return;
 }
 
-using (TextureWorkerSkia worker = new())
+using (TextureWorker worker = new())
 {
     double scale = -1;
     bool selectScale = true;
@@ -135,7 +135,7 @@ using (TextureWorkerSkia worker = new())
     void ScaleEmbeddedTexture(UndertaleEmbeddedTexture tex)
     {
         MagickImage embImage = worker.GetEmbeddedTexture(tex);
-        using IMagickImage<byte> scaledEmbImage = TextureWorkerSkia.ResizeImage(embImage, (int)(embImage.Width * scale), (int)(embImage.Height * scale), PixelInterpolateMethod.Nearest);
+        using IMagickImage<byte> scaledEmbImage = TextureWorker.ResizeImage(embImage, (int)(embImage.Width * scale), (int)(embImage.Height * scale), PixelInterpolateMethod.Nearest);
         try
         {
             uint width = (uint)scaledEmbImage.Width;

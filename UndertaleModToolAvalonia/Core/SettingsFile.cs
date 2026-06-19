@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -19,13 +20,17 @@ public partial class SettingsFile
 {
     public MainViewModel MainVM = null!;
 
+    public static SettingsFile? Instance { get; private set; }
+
     public SettingsFile()
     {
+        Instance = this;
     }
 
     public SettingsFile(IServiceProvider serviceProvider)
     {
         MainVM = serviceProvider.GetRequiredService<MainViewModel>();
+        Instance = this;
     }
 
     public static SettingsFile LoadWithoutMainVM()
@@ -285,6 +290,14 @@ public partial class SettingsFile
     public bool EnableQiuUtmtV3ScriptEngine { get; set; } = true;
     
     public bool UseSoraEditor { get; set; } = true;
+
+    [Notify] private bool _ChangeTrackingEnabled = true;
+    [Notify] private bool _CodeEditorWordWrap = false;
+    [Notify] private bool _CodeEditorShowWhitespace = false;
+    [Notify] private bool _CodeEditorShowHoverInfo = true;
+    [Notify] private bool _RecompileAllCodeSourcesOnProjectSave = false;
+
+    public List<string> RecentFiles { get; set; } = [];
 
     public Underanalyzer.Decompiler.DecompileSettings DecompileSettings { get; set; } = new();
 }

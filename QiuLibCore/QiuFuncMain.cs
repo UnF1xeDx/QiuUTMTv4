@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Newtonsoft.Json;
 using System;
@@ -869,10 +869,10 @@ public partial class QiuFuncMain : IScriptInterface
 
                 // Link to object's event with a blank code entry
                 UndertaleCode manualCode = UndertaleCode.CreateEmptyEntry(Data, codeEntry);
-                CodeImportGroup.LinkEvent(obj, manualCode, EventType.Collision, eventSubtype);
+                CodeImportGroup.LinkEvent(obj, manualCode, EventType.Collision, eventSubtype, MainThreadAction);
 
                 // Perform code import using manual code entry
-                CodeImportGroup group = new(Data);
+                CodeImportGroup group = new(Data) { MainThreadAction = MainThreadAction };
                 group.QueueReplace(manualCode, gmlCode);
                 result = group.Import();
             }
@@ -881,7 +881,7 @@ public partial class QiuFuncMain : IScriptInterface
         // When not manually linking, just let a code import group do it during importing
         if (!manualLink)
         {
-            CodeImportGroup group = new(Data);
+            CodeImportGroup group = new(Data) { MainThreadAction = MainThreadAction };
             group.QueueReplace(codeEntry, gmlCode);
             result = group.Import();
         }

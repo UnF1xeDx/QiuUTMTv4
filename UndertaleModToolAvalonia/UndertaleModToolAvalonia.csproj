@@ -52,7 +52,7 @@
         <PackageReference Include="DynamicData" Version="9.4.1" />
         <PackageReference Include="Irihi.Ursa" Version="1.14.0" />
         <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.14.0" />
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="5.3.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
         <PackageReference Include="Prism.DryIoc.Avalonia" Version="9.0.537.11300-pre" />
@@ -76,6 +76,11 @@
         <ProjectReference Include="..\QiuLibCore\QiuLibCore.csproj" />
         <ProjectReference Include="..\QiuSkiaBridge\QiuSkiaBridge.csproj" />
         <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Assets\GmlSpecEnglish.gmlspec" />
+      <EmbeddedResource Include="Assets\GmlSpecChinese.gmlspec" />
     </ItemGroup>
 
     <ItemGroup>

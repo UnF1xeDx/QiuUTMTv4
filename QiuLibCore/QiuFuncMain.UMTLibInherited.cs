@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,6 +16,7 @@ using UndertaleModLib.Compiler;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
 using UndertaleModLib.Scripting;
+using UndertaleModLib.Project;
 
 namespace UTMTdrid;
 
@@ -58,6 +59,12 @@ public partial class QiuFuncMain : IScriptInterface
 
     /// <inheritdoc/>
     public bool IsAppClosed { get; set; }
+
+    /// <inheritdoc/>
+    public ProjectContext Project { get; set; }
+
+    /// <inheritdoc/>
+    public Action<Action> MainThreadAction { get; set; } = action => action();
 
     #endregion
 

@@ -13,7 +13,7 @@ EnsureDataLoaded();
 string importFolder = PromptChooseDirectory();
 if (importFolder is null)
 {
-    throw new ScriptException("The import folder was not set.");
+    throw new ScriptCancelledException("The import folder was not set.");
 }
 
 // Find all files in the folder.
@@ -43,7 +43,7 @@ foreach (string file in dirFiles)
     {
         throw new ScriptException($"{fileNameWithExtension} could not be imported as the sprite {spriteName} does not exist.");
     }
-    (int imgWidth, int imgHeight) = TextureWorkerSkia.GetImageSizeFromFile(file);
+    (int imgWidth, int imgHeight) = TextureWorker.GetImageSizeFromFile(file);
     (int expectedMaskWidth, int expectedMaskHeight) = foundSprite.CalculateMaskDimensions(Data);
     if (expectedMaskWidth != imgWidth || expectedMaskHeight != imgHeight)
     {
@@ -104,15 +104,27 @@ await Task.Run(() =>
         int frame = int.Parse(stripped.Substring(lastUnderscore + 1));
         UndertaleSprite sprite = Data.Sprites.ByName(spriteName);
         int collisionMaskCount = sprite.CollisionMasks.Count;
-        while (collisionMaskCount <= frame)
+        if (collisionMaskCount <= frame)
         {
-            sprite.CollisionMasks.Add(sprite.NewMaskEntry(Data));
-            collisionMaskCount += 1;
+            MainThreadAction(() =>
+            {
+                do
+                {
+                    sprite.CollisionMasks.Add(sprite.NewMaskEntry(Data));
+                    collisionMaskCount++;
+                }
+                while (collisionMaskCount <= frame);
+            });
         }
 
         // Import the mask.
         (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(Data);
-        sprite.CollisionMasks[frame].Data = TextureWorkerSkia.ReadMaskData(file, maskWidth, maskHeight);
+        var maskData = TextureWorker.ReadMaskData(file, maskWidth, maskHeight);
+        MainThreadAction(() =>
+        {
+            sprite.CollisionMasks[frame].Data = maskData;
+            Project?.MarkAssetForExport(sprite);
+        });
     }
 });
 

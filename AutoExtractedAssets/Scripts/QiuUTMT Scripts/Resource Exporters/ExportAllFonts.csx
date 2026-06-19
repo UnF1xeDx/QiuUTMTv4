@@ -17,7 +17,7 @@ if (fntFolder is null)
 SetProgressBar(null, "Fonts", 0, Data.Fonts.Count);
 StartProgressBarUpdater();
 
-TextureWorkerSkia worker = null;
+TextureWorker worker = null;
 using (worker = new())
 {
     await DumpFonts();
@@ -35,8 +35,8 @@ void DumpFont(UndertaleFont font)
 {
     if (font is not null)
     {
-        worker.ExportAsPNG(font.Texture, Path.Combine(fntFolder, $"{font.Name.Content}.png"));
-        using (StreamWriter writer = new(Path.Combine(fntFolder, $"glyphs_{font.Name.Content}.csv")))
+        worker.ExportAsPNG(font.Texture, Paths.JoinVerifyWithinDirectory(fntFolder, $"{font.Name.Content}.png"));
+        using (StreamWriter writer = new(Paths.JoinVerifyWithinDirectory(fntFolder, $"glyphs_{font.Name.Content}.csv")))
         {
             writer.WriteLine($"{font.DisplayName};{font.EmSize};{font.Bold};{font.Italic};{font.Charset};{font.AntiAliasing};{font.ScaleX};{font.ScaleY}");
 

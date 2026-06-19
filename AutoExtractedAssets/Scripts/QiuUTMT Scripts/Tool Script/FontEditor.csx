@@ -17,7 +17,7 @@ if (font is null)
 {
     return; // the 'Cancel' or 'X' button is hit
 }
-using (TextureWorkerSkia textureWorker = new())
+using (TextureWorker textureWorker = new())
 {
     _ = new FontEditorGUI(font, textureWorker).ShowDialog(); // Font editor GUI
 }
@@ -27,11 +27,11 @@ class FontEditorGUI : Form
     UndertaleFont font;
     
     List<Letter> letterData = new List<Letter>();
-    TextureWorkerSkia textureWorker = null;
+    TextureWorker textureWorker = null;
     
     ListView listView;
     bool savePrompt = false;
-    public FontEditorGUI(UndertaleFont font, TextureWorkerSkia textureWorker)
+    public FontEditorGUI(UndertaleFont font, TextureWorker textureWorker)
     {
         this.font = font;
         this.textureWorker = textureWorker;
@@ -1297,7 +1297,7 @@ static void TrySetFormIcon(Form form)
     {
         string part1 = Path.GetDirectoryName(Application.ExecutablePath);
         string part2 = AppDomain.CurrentDomain.FriendlyName + ".exe";
-        string exepath = Path.Combine(part1, part2);
+        string exepath = Paths.JoinVerifyWithinDirectory(part1, part2);
         Icon icon = Icon.ExtractAssociatedIcon(exepath);
         form.Icon = icon;
     }

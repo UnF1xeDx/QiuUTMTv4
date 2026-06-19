@@ -16,7 +16,7 @@ if (texFolder is null)
 SetProgressBar(null, "Sprite masks", 0, Data.Sprites.Count);
 StartProgressBarUpdater();
 
-TextureWorkerSkia worker = null;
+TextureWorker worker = null;
 using (worker = new())
 {
     await DumpSprites();
@@ -42,7 +42,7 @@ void DumpSprite(UndertaleSprite sprite)
         if (sprite.CollisionMasks[i]?.Data is not null)
         {
             (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(Data);
-            TextureWorkerSkia.ExportCollisionMaskPNG(sprite.CollisionMasks[i], Path.Combine(texFolder, $"{sprite.Name.Content}_{i}.png"), maskWidth, maskHeight);
+            TextureWorker.ExportCollisionMaskPNG(sprite.CollisionMasks[i], Paths.JoinVerifyWithinDirectory(texFolder, $"{sprite.Name.Content}_{i}.png"), maskWidth, maskHeight);
         }
     }
 

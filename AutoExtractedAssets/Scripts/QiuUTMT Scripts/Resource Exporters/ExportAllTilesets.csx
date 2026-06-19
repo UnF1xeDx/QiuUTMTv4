@@ -16,7 +16,7 @@ if (texFolder is null)
 SetProgressBar(null, "Tilesets", 0, Data.Backgrounds.Count);
 StartProgressBarUpdater();
 
-TextureWorkerSkia worker = null;
+TextureWorker worker = null;
 using (worker = new())
 {
     await DumpTilesets();
@@ -34,7 +34,7 @@ void DumpTileset(UndertaleBackground tileset)
 {
     if (tileset?.Texture is not null)
     {
-        worker.ExportAsPNG(tileset.Texture, Path.Combine(texFolder, $"{tileset.Name.Content}.png"));
+        worker.ExportAsPNG(tileset.Texture, Paths.JoinVerifyWithinDirectory(texFolder, $"{tileset.Name.Content}.png"));
     }
 
     IncrementProgressParallel();

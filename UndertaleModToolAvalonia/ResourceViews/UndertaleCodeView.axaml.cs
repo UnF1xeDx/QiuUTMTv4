@@ -5,6 +5,7 @@ using System.Reflection.Metadata;
 using System.Xml;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
@@ -12,6 +13,7 @@ using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
+using AvaloniaEdit.Search;
 
 namespace UndertaleModToolAvalonia;
 
@@ -19,6 +21,12 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 {
     private static IHighlightingDefinition? GMLHighlightingDefinition = null;
     private static IHighlightingDefinition? ASMHighlightingDefinition = null;
+
+    private readonly ModifiedLinesBackgroundRenderer _gmlModifiedRenderer = new();
+    private readonly ModifiedLinesBackgroundRenderer _asmModifiedRenderer = new();
+
+    private double _zoomFontSize = 14;
+    private static double LastZoomFontSize = 14;
 
     public (int, int) LastCaretOffsets;
 
@@ -80,6 +88,36 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
         InitializeTextEditor(GMLTextEditor);
         InitializeTextEditor(ASMTextEditor);
+
+        // Install search panels
+        SearchPanel.Install(GMLTextEditor);
+        SearchPanel.Install(ASMTextEditor);
+
+        // Add modified lines background renderers
+        GMLTextEditor.TextArea.TextView.BackgroundRenderers.Add(_gmlModifiedRenderer);
+        ASMTextEditor.TextArea.TextView.BackgroundRenderers.Add(_asmModifiedRenderer);
+
+        // Track text changes for modified lines highlighting
+        GMLTextEditor.TextChanged += (s, e) =>
+        {
+            _gmlModifiedRenderer.MarkDirty();
+        };
+        ASMTextEditor.TextChanged += (s, e) =>
+        {
+            _asmModifiedRenderer.MarkDirty();
+        };
+
+        // Ctrl+scroll wheel zoom
+        GMLTextEditor.AddHandler(PointerWheelChangedEvent, Editor_PointerWheelChanged, RoutingStrategies.Tunnel);
+        ASMTextEditor.AddHandler(PointerWheelChangedEvent, Editor_PointerWheelChanged, RoutingStrategies.Tunnel);
+
+        // Ctrl+F and Ctrl+H keybindings
+        GMLTextEditor.AddHandler(KeyDownEvent, Editor_KeyDown, RoutingStrategies.Tunnel);
+        ASMTextEditor.AddHandler(KeyDownEvent, Editor_KeyDown, RoutingStrategies.Tunnel);
+
+        // Word wrap and whitespace checkboxes
+        WordWrapCheck.IsCheckedChanged += WordWrapCheck_Changed;
+        ShowWhitespaceCheck.IsCheckedChanged += ShowWhitespaceCheck_Changed;
     }
 
     static IHighlightingDefinition LoadHighlightingDefinition(string name)
@@ -94,8 +132,78 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
     {
         textEditor.Options.ConvertTabsToSpaces = true;
         textEditor.Options.HighlightCurrentLine = true;
+        textEditor.FontSize = _zoomFontSize;
     }
 
+    private void Editor_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            e.Handled = true;
+            ZoomChange(e.Delta.Y > 0);
+        }
+    }
+
+    private void ZoomChange(bool zoomingIn)
+    {
+        if (zoomingIn)
+        {
+            if (_zoomFontSize < 100)
+                _zoomFontSize += 1;
+        }
+        else
+        {
+            if (_zoomFontSize > 5)
+                _zoomFontSize -= 1;
+        }
+
+        LastZoomFontSize = _zoomFontSize;
+        GMLTextEditor.FontSize = _zoomFontSize;
+        ASMTextEditor.FontSize = _zoomFontSize;
+    }
+
+    private void Editor_KeyDown(object? sender, KeyEventArgs e)
+    {
+        // Ctrl+F and Ctrl+H are handled by SearchPanel automatically when installed,
+        // but we handle them here explicitly to ensure they work on both editors
+        // regardless of which one has focus.
+    }
+
+    private void WordWrapCheck_Changed(object? sender, EventArgs e)
+    {
+        if (GMLTextEditor == null) return;
+        bool value = WordWrapCheck.IsChecked ?? false;
+        GMLTextEditor.WordWrap = value;
+        ASMTextEditor.WordWrap = value;
+    }
+
+    private void ShowWhitespaceCheck_Changed(object? sender, EventArgs e)
+    {
+        if (GMLTextEditor == null) return;
+        bool value = ShowWhitespaceCheck.IsChecked ?? false;
+        GMLTextEditor.Options.ShowSpaces = value;
+        GMLTextEditor.Options.ShowTabs = value;
+        ASMTextEditor.Options.ShowSpaces = value;
+        ASMTextEditor.Options.ShowTabs = value;
+    }
+
+    /// <summary>
+    /// Sets the original text for modified lines tracking. Call after code is loaded.
+    /// </summary>
+    public void SetOriginalTextForModifiedTracking()
+    {
+        _gmlModifiedRenderer.SetOriginalText(GMLTextEditor.Text, GMLTextEditor.Document);
+        _asmModifiedRenderer.SetOriginalText(ASMTextEditor.Text, ASMTextEditor.Document);
+    }
+
+    /// <summary>
+    /// Clears modified line markers (e.g., after a successful compile/save).
+    /// </summary>
+    public void ClearModifiedLines()
+    {
+        _gmlModifiedRenderer.ClearModifiedLines();
+        _asmModifiedRenderer.ClearModifiedLines();
+    }
 
     public void ProcessLastGoToLocation()
     {

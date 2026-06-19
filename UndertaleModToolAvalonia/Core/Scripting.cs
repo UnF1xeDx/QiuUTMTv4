@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -20,6 +20,7 @@ using UndertaleModLib;
 using UndertaleModLib.Decompiler;
 using UndertaleModLib.Models;
 using UndertaleModLib.Scripting;
+using UndertaleModLib.Project;
 using UndertaleModLib.Util;
 
 namespace UndertaleModToolAvalonia;
@@ -142,6 +143,10 @@ public class ScriptGlobals : IScriptInterface
     public string ScriptErrorType => throw new NotImplementedException();
 
     public bool IsAppClosed => throw new NotImplementedException();
+
+    public ProjectContext? Project => null; // TODO: Implement project system
+
+    public Action<Action> MainThreadAction { get; } = action => Dispatcher.UIThread.Invoke(action);
 
     public void AddProgress(int amount)
     {

@@ -36,7 +36,7 @@
               ConverterParameter=GE2}">
             
             <Label Content="{x:Static strings1:Strings.Unknown_Always_2}"></Label>
-            <TextBox Text="{Binding Background.GMS2UnknownAlways2}" />
+            <TextBox Text="{Binding Background.GMS2TilesetVersion}" />
 
             <Label Content="{x:Static strings1:Strings.Tile_Width}"></Label>
             <TextBox Text="{Binding Background.GMS2TileWidth}" />
@@ -60,7 +60,7 @@
             <TextBox Text="{Binding Background.GMS2TileCount}" />
 
             <Label Content="{x:Static strings1:Strings.Exported_Sprite_Index}"></Label>
-            <TextBox Text="{Binding Background.GMS2ExportedSpriteIndex}" />
+            <l:UndertaleResourceReferenceView Reference="{Binding Background.GMS2ExportedSprite}" />
 
             <Label Content="{x:Static strings1:Strings.Frame_Time__microseconds}"></Label>
             <TextBox Text="{Binding Background.GMS2FrameLength}" />

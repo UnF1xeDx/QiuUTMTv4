@@ -42,7 +42,7 @@ foreach (string listElement in splitStringsList)
 SetProgressBar(null, "Sprites", 0, spritesToDump.Count);
 StartProgressBarUpdater();
 
-TextureWorkerSkia worker = null;
+TextureWorker worker = null;
 using (worker = new())
 {
     await Task.Run(() =>
@@ -62,7 +62,7 @@ void DumpSprite(UndertaleSprite sprite)
     {
         if (sprite.Textures[i]?.Texture is not null)
         {
-            worker.ExportAsPNG(sprite.Textures[i].Texture, Path.Combine(texFolder, $"{sprite.Name.Content}_{i}.png"), null, padded);
+            worker.ExportAsPNG(sprite.Textures[i].Texture, Paths.JoinVerifyWithinDirectory(texFolder, $"{sprite.Name.Content}_{i}.png"), null, padded);
         }
     }
     IncrementProgress();
