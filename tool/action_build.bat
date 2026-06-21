@@ -13,19 +13,19 @@ set "SignedApk=%AndroidBinDir%\com.genouka.qiuutmtv4-Signed.apk"
 set "OutputApk=%AndroidBinDir%\output.merged.apk"
 set "OverrideDir=%AndroidObjDir%\android\.__override__"
 set "AssetsDir=%AndroidObjDir%\android\assets"
-set "ClassesDex=%ExecutePath%classes.dex"
+set "ClassesDex=%ExecutePath%classes3.dex"
 
 :: Prebuild Resources only for github actions because local build will automatically prebuild resources
 call "%ExecutePath%prebuild_resources.bat"
 
-echo [1/5] Building UndertaleModToolAvalonia...
+echo [1/6] Building UndertaleModToolAvalonia...
 msbuild "%ExecutePath%..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" /p:Configuration=Debug /p:Platform="Any CPU"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to build UndertaleModToolAvalonia
     exit /b 1
 )
 
-echo [2/5] Building Android project with fast deploy and collecting all assemblies...
+echo [2/6] Building Android project with fast deploy and collecting all assemblies...
 msbuild "%AndroidProjectDir%\UndertaleModToolAvalonia.Android.csproj" ^
     /t:SignAndroidPackage ^
     /p:Configuration=Debug ^
@@ -37,7 +37,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-echo [3/5] Locating fast deploy files...
+echo [3/6] Locating fast deploy files...
 :: Different .NET Android SDK versions produce different directory structures:
 :: - Older SDK: android\.__override__\<abi>\*.dll
 :: - Newer SDK: android\assets\<abi>\*.dll
@@ -76,7 +76,7 @@ if exist "%AppBinDir%" (
     echo Satellite assemblies copied from app bin to __override__
 )
 
-echo [4/5] Packaging fast deploy files into APK...
+echo [4/6] Packaging fast deploy files into APK...
 :: Create assets directory for patcher
 mkdir "%ExecutePath%assets" 2>nul
 
@@ -98,14 +98,24 @@ if %ERRORLEVEL% neq 0 (
 del /q /f "%ExecutePath%assets\genouka_patcher.ext" 2>nul
 rmdir /s /q "%ExecutePath%assets"
 
-:: Add classes.dex
-"%ExecutePath%7z.exe" a -tzip "%SignedApk%" "%ClassesDex%" -aoa
+echo [5/6] Compiling patcher and adding classes3.dex...
+:: Compile yuanwow.* patcher classes (Application injection + genouka_patcher.ext auto-extraction)
+:: Uses classes3.dex because .NET Android build already produces classes.dex and classes2.dex (multidex)
+call "%ExecutePath%compile_patcher.bat"
 if %ERRORLEVEL% neq 0 (
-    echo ERROR: Failed to add classes.dex to APK
+    echo ERROR: Failed to compile patcher
     goto :error_exit
 )
 
-echo [5/5] Signing APK...
+:: Add classes3.dex (yuanwow.* classes) alongside the existing classes.dex and classes2.dex
+:: ART (API 21+) natively loads all classes*.dex files from the APK
+"%ExecutePath%7z.exe" a -tzip "%SignedApk%" "%ClassesDex%" -aoa
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: Failed to add classes3.dex to APK
+    goto :error_exit
+)
+
+echo [6/6] Signing APK...
 del /q /f "%OutputApk%" 2>nul
 "%ExecutePath%signapk.exe" sign --ks "%ExecutePath%debug.keystore" --ks-key-alias "androiddebugkey" --ks-pass "pass:android" --key-pass "pass:android" --in "%SignedApk%" --out "%OutputApk%"
 if %ERRORLEVEL% neq 0 (

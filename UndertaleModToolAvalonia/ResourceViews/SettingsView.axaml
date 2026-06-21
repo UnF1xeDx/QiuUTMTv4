@@ -1,4 +1,5 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization"
              xmlns:assets="using:UndertaleModToolAvalonia.Assets"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,11 +11,11 @@
              Classes="SettingsView" xmlns:strings="clr-namespace:UndertaleModToolAvalonia.Assets" >
     <ScrollViewer>
         <StackPanel>
-            <TextBlock FontWeight="Bold" Text="{x:Static assets:Strings.User_Interface}" />
+            <TextBlock FontWeight="Bold" Text="{loc:Loc User_Interface}" />
             <Separator />
 
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static assets:Strings.Language__Restart_to_apply}"/>
+                <Label Content="{loc:Loc Language__Restart_to_apply}"/>
                 <ComboBox ItemsSource="{x:Static l:SettingsFile.SupportedLanguages}"
                           SelectedIndex="{Binding MainVM.Settings.LanguageIndex}"
                           x:DataType="l:SettingsViewModel">
@@ -27,39 +28,68 @@
             </Grid>
             
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static assets:Strings.Theme}"/>
+                <Label Content="{loc:Loc Theme}"/>
                 <ComboBox SelectedIndex="{Binding MainVM.Settings.Theme}">
-                    <ComboBoxItem Content="{x:Static assets:Strings.Follow_System}"/>
-                    <ComboBoxItem Content="{x:Static assets:Strings.Light}"/>
-                    <ComboBoxItem Content="{x:Static assets:Strings.Dark}"/>
+                    <ComboBoxItem Content="{loc:Loc Follow_System}"/>
+                    <ComboBoxItem Content="{loc:Loc Light}"/>
+                    <ComboBoxItem Content="{loc:Loc Dark}"/>
                 </ComboBox>
             </Grid>
 
             <StackPanel>
-                <CheckBox Content="{x:Static assets:Strings.OpenNewResourceAfterCreatingIt}"
+                <CheckBox Content="{loc:Loc OpenNewResourceAfterCreatingIt}"
                           IsChecked="{Binding MainVM.Settings.OpenNewResourceAfterCreatingIt}" />
-                <CheckBox Content="{x:Static assets:Strings.Enable_syntax_highlighting}"
+                <CheckBox Content="{loc:Loc Enable_syntax_highlighting}"
                           IsChecked="{Binding MainVM.Settings.EnableSyntaxHighlighting}" />
-                <CheckBox Content="{x:Static assets:Strings.Automatically_compile_and_decompile}"
+                <CheckBox Content="{loc:Loc Automatically_compile_and_decompile}"
                           IsChecked="{Binding MainVM.Settings.AutomaticallyCompileAndDecompileCodeOnLostFocus}" />
 
-                <CheckBox Content="{x:Static assets:Strings.EnableRoomGridByDefault}"
+                <CheckBox Content="{loc:Loc EnableRoomGridByDefault}"
                           IsChecked="{Binding MainVM.Settings.EnableRoomGridByDefault}" />
 
                 <StackPanel Orientation="Horizontal">
-                    <Label Content="{x:Static assets:Strings.DefaultRoomGridSize}" />
+                    <Label Content="{loc:Loc DefaultRoomGridSize}" />
                     <TextBox Text="{Binding MainVM.Settings.DefaultRoomGridWidth}" />
                     <TextBox Text="{Binding MainVM.Settings.DefaultRoomGridHeight}" />
                 </StackPanel>
             </StackPanel>
 
-            <TextBlock FontWeight="Bold" Text="{x:Static assets:Strings.Script_Execution}"/>
+            <TextBlock FontWeight="Bold" Text="{loc:Loc Script_Execution}"/>
             <Separator />
 
             <StackPanel>
-                <CheckBox Content="{x:Static assets:Strings.Use_QiuUTMTv3_Script_Engine_to_execute}"
+                <CheckBox Content="{loc:Loc Use_QiuUTMTv3_Script_Engine_to_execute}"
                           IsChecked="{Binding MainVM.Settings.EnableQiuUtmtV3ScriptEngine}" />
             </StackPanel>
+
+            <TextBlock FontWeight="Bold" Text="Background Image"/>
+            <Separator />
+            <Grid ColumnDefinitions="1*,3*">
+                <Label Content="Image Path" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBox Text="{Binding MainVM.Settings.BackgroundImagePath}" Width="300" />
+                    <Button Content="Browse" Click="BackgroundBrowseButton_Click" Margin="3" Padding="8,2" />
+                    <Button Content="Clear" Click="BackgroundClearButton_Click" Margin="3" Padding="8,2" />
+                </StackPanel>
+            </Grid>
+            <Grid ColumnDefinitions="1*,3*">
+                <Label Content="Opacity" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Slider Minimum="0" Maximum="1" Value="{Binding MainVM.Settings.BackgroundOpacity}"
+                            Width="200" TickFrequency="0.05" IsSnapToTickEnabled="True" />
+                    <TextBlock Text="{Binding MainVM.Settings.BackgroundOpacity, StringFormat={}{0:F2}}"
+                               VerticalAlignment="Center" Margin="10,0,0,0" />
+                </StackPanel>
+            </Grid>
+            <Grid ColumnDefinitions="1*,3*">
+                <Label Content="Stretch Mode" VerticalAlignment="Center"/>
+                <ComboBox SelectedItem="{Binding MainVM.Settings.BackgroundStretchMode}">
+                    <ComboBoxItem Content="UniformToFill" />
+                    <ComboBoxItem Content="Fill" />
+                    <ComboBoxItem Content="Uniform" />
+                    <ComboBoxItem Content="None" />
+                </ComboBox>
+            </Grid>
 
             <!--
             TODO: Missing:
@@ -69,116 +99,126 @@
             string UnknownArgumentNamePattern { get; set; } = "arg{0}";
             -->
 
-            <TextBlock FontWeight="Bold" Text="{x:Static assets:Strings.Code_Editor}"></TextBlock>
+            <TextBlock FontWeight="Bold" Text="{loc:Loc Code_Editor}"></TextBlock>
             <Separator />
-            <CheckBox Content="{x:Static strings:Strings.Use_SoraEditor_as_code_editor__Only}"
+            <CheckBox Content="{loc:Loc Use_SoraEditor_as_code_editor__Only}"
                       IsChecked="{Binding MainVM.Settings.UseSoraEditor}" />
+            <CheckBox Content="Enable Change Tracking"
+                      IsChecked="{Binding MainVM.Settings.ChangeTrackingEnabled}" />
+            <CheckBox Content="Word Wrap"
+                      IsChecked="{Binding MainVM.Settings.CodeEditorWordWrap}" />
+            <CheckBox Content="Show Whitespace"
+                      IsChecked="{Binding MainVM.Settings.CodeEditorShowWhitespace}" />
+            <CheckBox Content="Show Hover Info"
+                      IsChecked="{Binding MainVM.Settings.CodeEditorShowHoverInfo}" />
+            <CheckBox Content="Recompile All Code Sources On Project Save"
+                      IsChecked="{Binding MainVM.Settings.RecompileAllCodeSourcesOnProjectSave}" />
             <Grid ColumnDefinitions="1*,1*">
                 <StackPanel Grid.Column="0">
-                    <CheckBox Content="{x:Static assets:Strings.Use_CSS_hex_color_literals}"
-                              ToolTip.Tip="{x:Static assets:Strings.If_enabled__color_constants_can_be}"
+                    <CheckBox Content="{loc:Loc Use_CSS_hex_color_literals}"
+                              ToolTip.Tip="{loc:Loc If_enabled__color_constants_can_be}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.UseCSSColors}" />
 
-                    <CheckBox Content="{x:Static assets:Strings.Always_use_semicolons}"
-                              ToolTip.Tip="{x:Static assets:Strings.If_enabled__all_statements_that_can}"
+                    <CheckBox Content="{loc:Loc Always_use_semicolons}"
+                              ToolTip.Tip="{loc:Loc If_enabled__all_statements_that_can}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.UseSemicolon}" />
 
-                    <CheckBox Content="{x:Static assets:Strings.Open_block_braces_on_same_line}"
-                              ToolTip.Tip="{x:Static assets:Strings.If_enabled__the_curly_braces_used}"
+                    <CheckBox Content="{loc:Loc Open_block_braces_on_same_line}"
+                              ToolTip.Tip="{loc:Loc If_enabled__the_curly_braces_used}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.OpenBlockBraceOnSameLine}" />
 
-                    <CheckBox Content="{x:Static assets:Strings.Create_enum_declarations}"
-                              ToolTip.Tip="{x:Static assets:Strings.If_enabled__enum_declarations_identified}"
+                    <CheckBox Content="{loc:Loc Create_enum_declarations}"
+                              ToolTip.Tip="{loc:Loc If_enabled__enum_declarations_identified}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CreateEnumDeclarations}" />
 
-                    <CheckBox Content="{x:Static assets:Strings.Print_warnings}"
-                              ToolTip.Tip="{x:Static assets:Strings.If_enabled__warnings_generated_during}"
+                    <CheckBox Content="{loc:Loc Print_warnings}"
+                              ToolTip.Tip="{loc:Loc If_enabled__warnings_generated_during}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.PrintWarnings}" />
 
                 </StackPanel>
 
                 <StackPanel Grid.Column="1">
                     <Grid ColumnDefinitions="Auto,1*">
-                        <Label Content="{x:Static assets:Strings.Named_instance_ID_prefix}"
-                               ToolTip.Tip="{x:Static strings:Strings.Prefix_used_for_named_instance_IDs}" />
+                        <Label Content="{loc:Loc Named_instance_ID_prefix}"
+                               ToolTip.Tip="{loc:Loc Prefix_used_for_named_instance_IDs}" />
                         <TextBox Grid.Column="1" Text="{Binding MainVM.Settings.InstanceIdPrefix}" />
                     </Grid>
 
                     <!-- TODO: Make this a ComboBox -->
                     <Grid ColumnDefinitions="Auto,1*">
-                        <Label Content="{x:Static assets:Strings.Indent_string}" />
+                        <Label Content="{loc:Loc Indent_string}" />
                         <TextBox Grid.Column="1" Text="{Binding MainVM.Settings.DecompileSettings.IndentString}" />
                     </Grid>
 
-                    <CheckBox Content="{x:Static assets:Strings.Remove_block_braces_if_single_line}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__blocks_that_contain_a}"
+                    <CheckBox Content="{loc:Loc Remove_block_braces_if_single_line}"
+                              ToolTip.Tip="{loc:Loc If_enabled__blocks_that_contain_a}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.RemoveSingleLineBlockBraces}" />
 
-                    <CheckBox Content="{x:Static strings:Strings.Enum_macro_declarations_at_top_of}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__enums_and_macros_will}"
+                    <CheckBox Content="{loc:Loc Enum_macro_declarations_at_top_of}"
+                              ToolTip.Tip="{loc:Loc If_enabled__enums_and_macros_will}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.MacroDeclarationsAtTop}" />
 
-                    <CheckBox Content="{x:Static strings:Strings.Allow_leftover_data_on_VM_stack}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__data_left_over_on_the}"
+                    <CheckBox Content="{loc:Loc Allow_leftover_data_on_VM_stack}"
+                              ToolTip.Tip="{loc:Loc If_enabled__data_left_over_on_the}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.AllowLeftoverDataOnStack}" />
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="{x:Static strings:Strings.Add_empty_lines}"
-                       ToolTip.Tip="{x:Static strings:Strings.Select_specific_syntax_to_add_empty}" />
+            <TextBlock Text="{loc:Loc Add_empty_lines}"
+                       ToolTip.Tip="{loc:Loc Select_specific_syntax_to_add_empty}" />
 
             <Grid ColumnDefinitions="1*,1*">
                 <StackPanel Grid.Column="0">
-                    <CheckBox Content="{x:Static strings:Strings.Around_branch_statements}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_before}"
+                    <CheckBox Content="{loc:Loc Around_branch_statements}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_before}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineAroundBranchStatements}" />
-                    <CheckBox Content="{x:Static strings:Strings.Before_switch_cases}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_before1}"
+                    <CheckBox Content="{loc:Loc Before_switch_cases}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_before1}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineBeforeSwitchCases}" />
-                    <CheckBox Content="{x:Static strings:Strings.Around_function_declarations}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_before2}"
+                    <CheckBox Content="{loc:Loc Around_function_declarations}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_before2}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineAroundFunctionDeclarations}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1">
-                    <CheckBox Content="{x:Static strings:Strings.After_local_variable_declarations}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_after}"
+                    <CheckBox Content="{loc:Loc After_local_variable_declarations}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_after}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineAfterBlockLocals}" />
-                    <CheckBox Content="{x:Static strings:Strings.After_switch_cases}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_after1}"
+                    <CheckBox Content="{loc:Loc After_switch_cases}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_after1}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineAfterSwitchCases}" />
-                    <CheckBox Content="{x:Static strings:Strings.Around_static_initialization}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__adds_an_empty_line_before3}"
+                    <CheckBox Content="{loc:Loc Around_static_initialization}"
+                              ToolTip.Tip="{loc:Loc If_enabled__adds_an_empty_line_before3}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.EmptyLineAroundStaticInitialization}" />
                 </StackPanel>
             </Grid>
 
-            <TextBlock Text="{x:Static strings:Strings.Perform_cleanups}"
-                       ToolTip.Tip="{x:Static strings:Strings.Select_specific_cleanup_operations}" />
+            <TextBlock Text="{loc:Loc Perform_cleanups}"
+                       ToolTip.Tip="{loc:Loc Select_specific_cleanup_operations}" />
 
             <Grid ColumnDefinitions="1*,1*">
                 <StackPanel Grid.Column="0">
                     <CheckBox Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
-                              Content="{x:Static strings:Strings.Try_catch_finally_rewriting}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__compiler_generated_code}"
+                              Content="{loc:Loc Try_catch_finally_rewriting}"
+                              ToolTip.Tip="{loc:Loc If_enabled__compiler_generated_code}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CleanupTry}" />
-                    <CheckBox Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="{x:Static strings:Strings.Default_argument_values}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__syntax_for_default_named}"
+                    <CheckBox Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="{loc:Loc Default_argument_values}"
+                              ToolTip.Tip="{loc:Loc If_enabled__syntax_for_default_named}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CleanupDefaultArgumentValues}" />
                     <CheckBox Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
-                              Content="{x:Static strings:Strings.Scope_local_variable_declarations}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__local_variable_declarations}"
+                              Content="{loc:Loc Scope_local_variable_declarations}"
+                              ToolTip.Tip="{loc:Loc If_enabled__local_variable_declarations}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CleanupLocalVarDeclarations}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1">
                     <CheckBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"
-                              Content="{x:Static strings:Strings.Transform_else_into_continue}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__certain_usages_of__quot}"
+                              Content="{loc:Loc Transform_else_into_continue}"
+                              ToolTip.Tip="{loc:Loc If_enabled__certain_usages_of__quot}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CleanupElseToContinue}" />
                     <CheckBox Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"
-                              Content="{x:Static strings:Strings.Builtin_array_variable_syntax}"
-                              ToolTip.Tip="{x:Static strings:Strings.If_enabled__certain_builtin_globals}"
+                              Content="{loc:Loc Builtin_array_variable_syntax}"
+                              ToolTip.Tip="{loc:Loc If_enabled__certain_builtin_globals}"
                               IsChecked="{Binding MainVM.Settings.DecompileSettings.CleanupBuiltinArrayVariables}" />
                 </StackPanel>
             </Grid>

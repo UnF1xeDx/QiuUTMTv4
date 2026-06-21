@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
@@ -25,7 +25,7 @@ public partial class App : Application
         SettingsFile settings = SettingsFile.LoadWithoutMainVM();
         if (settings != null)
         {
-            Thread.CurrentThread.CurrentUICulture = Assets.Strings.Culture = settings.GetCultureInfoFromSetting();
+            Thread.CurrentThread.CurrentUICulture = Localization.LocalizationSource.Instance.Culture = settings.GetCultureInfoFromSetting();
         }
         if (OperatingSystem.IsAndroid())
         {

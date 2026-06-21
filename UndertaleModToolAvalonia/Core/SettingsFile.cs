@@ -256,7 +256,8 @@ public partial class SettingsFile
         if (App.Current is not null)
         {
             CultureInfo culture = GetCultureInfoFromSetting();
-            Thread.CurrentThread.CurrentUICulture = Assets.Strings.Culture = culture;
+            Thread.CurrentThread.CurrentUICulture = culture;
+            Localization.LocalizationSource.Instance.Culture = culture;
             SemiTheme.OverrideLocaleResources(Application.Current, culture);
             Save();
         }
@@ -296,6 +297,10 @@ public partial class SettingsFile
     [Notify] private bool _CodeEditorShowWhitespace = false;
     [Notify] private bool _CodeEditorShowHoverInfo = true;
     [Notify] private bool _RecompileAllCodeSourcesOnProjectSave = false;
+
+    public string BackgroundImagePath { get; set; } = "";
+    public double BackgroundOpacity { get; set; } = 0.3;
+    public string BackgroundStretchMode { get; set; } = "UniformToFill";
 
     public List<string> RecentFiles { get; set; } = [];
 

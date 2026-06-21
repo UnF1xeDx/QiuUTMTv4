@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -135,6 +135,9 @@ public partial class MainViewModel
         Settings = SettingsFile.Load(ServiceProvider);
         Settings.OnLanguageChanged();
         Scripting = new(ServiceProvider);
+        UpdateRecentFilesMenu();
+        if (View is MainView mainView)
+            mainView.ApplyCustomBackground();
     }
 
     public async void OnLoaded()
@@ -511,6 +514,75 @@ public partial class MainViewModel
         }
     }
 
+    public void AddRecentFile(string path)
+    {
+        if (string.IsNullOrEmpty(path) || Settings is null)
+            return;
+
+        // Remove if already exists, then insert at top
+        Settings.RecentFiles.Remove(path);
+        Settings.RecentFiles.Insert(0, path);
+
+        // Keep max 10 items
+        while (Settings.RecentFiles.Count > 10)
+            Settings.RecentFiles.RemoveAt(Settings.RecentFiles.Count - 1);
+
+        Settings.Save();
+        UpdateRecentFilesMenu();
+    }
+
+    public void UpdateRecentFilesMenu()
+    {
+        if (View is not MainView mainView)
+            return;
+
+        var recentFilesMenu = mainView.FindControl<MenuItem>("RecentFilesMenu");
+        if (recentFilesMenu is null)
+            return;
+
+        recentFilesMenu.ItemsSource = null;
+        if (Settings?.RecentFiles is null || Settings.RecentFiles.Count == 0)
+        {
+            recentFilesMenu.IsEnabled = false;
+            return;
+        }
+
+        recentFilesMenu.IsEnabled = true;
+        var items = new List<MenuItem>();
+        foreach (string filePath in Settings.RecentFiles)
+        {
+            var item = new MenuItem
+            {
+                Header = filePath,
+            };
+            ToolTip.SetTip(item, filePath);
+            string capturedPath = filePath;
+            item.Click += async (_, _) =>
+            {
+                if (!await AskFileSave(UndertaleModToolAvalonia.Assets.Strings.Save_before_opening))
+                    return;
+
+                CloseData();
+
+                try
+                {
+                    using Stream stream = File.OpenRead(capturedPath);
+                    if (await LoadData(stream))
+                    {
+                        DataPath = capturedPath;
+                        AddRecentFile(capturedPath);
+                    }
+                }
+                catch (SystemException e)
+                {
+                    await ShowMessageDialog($"Error opening recent file: {e.Message}");
+                }
+            };
+            items.Add(item);
+        }
+        recentFilesMenu.ItemsSource = items;
+    }
+
     public async Task FileOpen()
     {
         if (OperatingSystem.IsAndroid())
@@ -537,6 +609,8 @@ public partial class MainViewModel
         if (await LoadData(stream))
         {
             DataPath = files[0].TryGetLocalPath();
+            if (DataPath is not null)
+                AddRecentFile(DataPath);
         }
     }
 

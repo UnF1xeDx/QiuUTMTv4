@@ -1,0 +1,164 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:l="clr-namespace:UndertaleModToolAvalonia"
+        mc:Ignorable="d"
+        x:Class="UndertaleModToolAvalonia.ImportGraphicsDialog"
+        x:DataType="l:ImportGraphicsDialog"
+        Title="Import Graphics"
+        Height="700" Width="900" MinWidth="700" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        ShowInTaskbar="False">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Folder selection -->
+        <TextBlock Grid.Row="0" Text="Import folder" FontSize="14" FontWeight="Bold" Margin="0,0,0,4"/>
+        <DockPanel Grid.Row="1" Margin="0,0,0,6">
+            <Button Name="BrowseButton" Content="Browse..." Click="BrowseButton_Click"
+                    Width="80" DockPanel.Dock="Right" Margin="5,0,0,0"/>
+            <Button Name="ScanButton" Content="Scan" Click="ScanButton_Click"
+                    Width="60" DockPanel.Dock="Right" Margin="5,0,0,0"/>
+            <TextBox Name="FolderTextBox" VerticalContentAlignment="Center"/>
+        </DockPanel>
+
+        <!-- Global settings expander -->
+        <Expander Grid.Row="2" Header="Global Settings" Margin="0,0,0,6" IsExpanded="False">
+            <Grid Margin="6">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Import mode -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Import mode:" VerticalAlignment="Center" Margin="0,0,10,4"/>
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,4">
+                    <RadioButton Name="ReplaceInPlaceRadio" Content="Replace In Place" IsChecked="True"
+                                 Margin="0,0,15,0" GroupName="ImportMode"/>
+                    <RadioButton Name="NewTexturePagesRadio" Content="New Texture Pages"
+                                 Margin="0,0,15,0" GroupName="ImportMode"/>
+                    <RadioButton Name="KeepOriginalRadio" Content="Keep Original Texture Page"
+                                 GroupName="ImportMode"/>
+                </StackPanel>
+
+                <!-- Import unknown as sprite -->
+                <CheckBox Name="ImportUnknownCheck" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                          Content="Import Unknown as Sprite" IsChecked="True"
+                          Margin="0,0,0,4"/>
+
+                <!-- Sprite properties -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Origin Position:" VerticalAlignment="Center" Margin="0,0,10,4"/>
+                <ComboBox Name="OriginPositionCombo" Grid.Row="2" Grid.Column="1"
+                          SelectedIndex="0" Margin="0,0,0,4" HorizontalAlignment="Left" MinWidth="160">
+                    <ComboBoxItem Content="Top Left"/>
+                    <ComboBoxItem Content="Top Center"/>
+                    <ComboBoxItem Content="Top Right"/>
+                    <ComboBoxItem Content="Center Left"/>
+                    <ComboBoxItem Content="Center"/>
+                    <ComboBoxItem Content="Center Right"/>
+                    <ComboBoxItem Content="Bottom Left"/>
+                    <ComboBoxItem Content="Bottom Center"/>
+                    <ComboBoxItem Content="Bottom Right"/>
+                </ComboBox>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Animation Speed:" VerticalAlignment="Center" Margin="0,0,10,4"/>
+                <TextBox Name="AnimationSpeedTextBox" Grid.Row="3" Grid.Column="1"
+                         Text="1" Margin="0,0,0,4" HorizontalAlignment="Left" MinWidth="80"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Playback Type:" VerticalAlignment="Center" Margin="0,0,10,4"/>
+                <ComboBox Name="PlaybackTypeCombo" Grid.Row="4" Grid.Column="1"
+                          SelectedIndex="1" Margin="0,0,0,4" HorizontalAlignment="Left" MinWidth="160">
+                    <ComboBoxItem Content="FPS"/>
+                    <ComboBoxItem Content="Frames Per Game Frame"/>
+                </ComboBox>
+
+                <!-- Texture page size -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Texture Page Size:" VerticalAlignment="Center" Margin="0,0,10,4"/>
+                <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,4">
+                    <ComboBox Name="TexturePageSizeCombo" SelectedIndex="0"
+                              HorizontalAlignment="Left" MinWidth="100">
+                        <ComboBoxItem Content="2048"/>
+                        <ComboBoxItem Content="4096"/>
+                        <ComboBoxItem Content="8192"/>
+                    </ComboBox>
+                    <Button Name="ApplyDefaultsButton" Content="Apply Defaults"
+                            Click="ApplyDefaultsButton_Click" Margin="15,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Expander>
+
+        <!-- DataGrid area -->
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Toolbar -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,4">
+                <Button Content="Select All" Click="SelectAll_Click" Margin="0,0,5,0" MinWidth="70"/>
+                <Button Content="Deselect All" Click="DeselectAll_Click" MinWidth="75"/>
+            </StackPanel>
+
+            <!-- DataGrid -->
+            <DataGrid Name="EntriesDataGrid" Grid.Row="1"
+                      x:DataType="l:ImportImageEntry"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="False"
+                      CanUserSortColumns="True"
+                      SelectionMode="Extended"
+                      BorderThickness="1"
+                      GridLinesVisibility="All">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="IsSelected" Binding="{Binding IsSelected, Mode=TwoWay}" Width="70"/>
+                    <DataGridTextColumn Header="FileName" Binding="{Binding FileName}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Type" Binding="{Binding ImageTypeDisplay}" Width="80" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="SpriteName" Binding="{Binding SpriteName}" Width="120" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Frame" Binding="{Binding FrameIndex}" Width="55" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Dimensions" Binding="{Binding DimensionInfo}" Width="140" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Status" Binding="{Binding StatusText}" Width="120" IsReadOnly="True"/>
+                    <DataGridTemplateColumn Header="Mode" Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="l:ImportImageEntry">
+                                <TextBlock Text="{Binding ImportModeDisplay}" VerticalAlignment="Center" Margin="4,0"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate x:DataType="l:ImportImageEntry">
+                                <ComboBox ItemsSource="{Binding AvailableModeDisplays}"
+                                          SelectedIndex="{Binding SelectedModeIndex, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!-- OK / Cancel buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal"
+                    HorizontalAlignment="Center" Margin="0,10,0,0">
+            <Button Name="OKButton" Content="OK" FontSize="14"
+                    Width="90" Height="32" Click="OKButton_Click"/>
+            <Button Content="Cancel" FontSize="14"
+                    Width="90" Height="32" Margin="15,0,0,0"
+                    Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

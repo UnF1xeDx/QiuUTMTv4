@@ -1,4 +1,7 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
+using System.IO;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Primitives;
@@ -7,6 +10,7 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Media.Imaging;
 using UndertaleModLib;
 using UndertaleModLib.Models;
 
@@ -320,6 +324,22 @@ public partial class MainView : UserControl, IView
         }
     }
 
+    private void TabMenu_Detach_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            if (e.Source is Control control)
+            {
+                TabStripItem? tabItem = control.FindLogicalAncestorOfType<TabStripItem>();
+                if (tabItem is not null && tabItem.DataContext is TabItemViewModel vmTabItem)
+                {
+                    var tabWindow = new TabWindow(vm, vmTabItem);
+                    tabWindow.Show();
+                }
+            }
+        }
+    }
+
     private async void CommandTextBox_KeyDown(object? sender, KeyEventArgs e)
     {
         if (DataContext is MainViewModel vm)
@@ -346,6 +366,40 @@ public partial class MainView : UserControl, IView
             case 2:
                 Grid0.ColumnDefinitions = new ColumnDefinitions("1*,Auto,3*");
                 break;
+        }
+    }
+
+    public void ApplyCustomBackground()
+    {
+        var settings = SettingsFile.Instance;
+        if (settings is null) return;
+
+        bool hasBackground = !string.IsNullOrEmpty(settings.BackgroundImagePath)
+                             && File.Exists(settings.BackgroundImagePath);
+
+        if (!hasBackground)
+        {
+            CustomBackgroundImage.Source = null;
+            return;
+        }
+
+        try
+        {
+            var bitmap = new Bitmap(settings.BackgroundImagePath);
+            CustomBackgroundImage.Source = bitmap;
+            CustomBackgroundImage.Opacity = Math.Clamp(settings.BackgroundOpacity, 0.0, 1.0);
+
+            CustomBackgroundImage.Stretch = settings.BackgroundStretchMode switch
+            {
+                "None" => Avalonia.Media.Stretch.None,
+                "Fill" => Avalonia.Media.Stretch.Fill,
+                "Uniform" => Avalonia.Media.Stretch.Uniform,
+                _ => Avalonia.Media.Stretch.UniformToFill
+            };
+        }
+        catch (Exception)
+        {
+            CustomBackgroundImage.Source = null;
         }
     }
 }

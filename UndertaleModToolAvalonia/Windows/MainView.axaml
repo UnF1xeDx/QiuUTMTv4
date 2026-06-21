@@ -6,6 +6,7 @@
              xmlns:undertale="clr-namespace:UndertaleModLib;assembly=UndertaleModLib"
              xmlns:undertalem="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
              xmlns:u="https://irihi.tech/ursa"
+             xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization"
              xmlns:assets="clr-namespace:UndertaleModToolAvalonia.Assets"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.MainView"
@@ -18,18 +19,18 @@
 
     <UserControl.Resources>
         <ContextMenu x:Key="ListMenu">
-            <MenuItem Header="{x:Static assets:Strings.Add}" Click="ContextMenu_Add_Click" />
+            <MenuItem Header="{loc:Loc Add}" Click="ContextMenu_Add_Click" />
         </ContextMenu>
         <ContextMenu x:Key="SingleMenu">
-            <MenuItem Header="{x:Static assets:Strings.Open}" Click="ContextMenu_Open_Click" />
-            <MenuItem Header="{x:Static assets:Strings.Open_in_new_tab}" Click="ContextMenu_OpenInNewTab_Click" />
+            <MenuItem Header="{loc:Loc Open}" Click="ContextMenu_Open_Click" />
+            <MenuItem Header="{loc:Loc Open_in_new_tab}" Click="ContextMenu_OpenInNewTab_Click" />
         </ContextMenu>
         <ContextMenu x:Key="ResourceMenu">
-            <MenuItem Header="{x:Static assets:Strings.Open}" Click="ContextMenu_Open_Click" />
-            <MenuItem Header="{x:Static assets:Strings.Open_in_new_tab}" Click="ContextMenu_OpenInNewTab_Click" />
-            <MenuItem Header="{x:Static assets:Strings.Copy_name}" Click="ContextMenu_CopyName_Click" />
-            <MenuItem Header="{x:Static assets:Strings.Swap_position}" Click="ContextMenu_Move_Click" />
-            <MenuItem Header="{x:Static assets:Strings.Remove}" Click="ContextMenu_Remove_Click" />
+            <MenuItem Header="{loc:Loc Open}" Click="ContextMenu_Open_Click" />
+            <MenuItem Header="{loc:Loc Open_in_new_tab}" Click="ContextMenu_OpenInNewTab_Click" />
+            <MenuItem Header="{loc:Loc Copy_name}" Click="ContextMenu_CopyName_Click" />
+            <MenuItem Header="{loc:Loc Swap_position}" Click="ContextMenu_Move_Click" />
+            <MenuItem Header="{loc:Loc Remove}" Click="ContextMenu_Remove_Click" />
         </ContextMenu>
         <l:DataItemToNameConverter x:Key="DataItemToNameConverter" />
         <l:TreeDataGridItemToContextMenuConverter x:Key="TreeDataGridItemToContextMenuConverter"
@@ -38,6 +39,8 @@
                                                   ResourceMenu="{StaticResource ResourceMenu}" />
     </UserControl.Resources>
     <Panel>
+        <Image x:Name="CustomBackgroundImage" Stretch="UniformToFill" Opacity="0.3"
+               IsHitTestVisible="False" />
         <DockPanel>
             <!-- <NativeMenuBar DockPanel.Dock="Top" /> -->
 
@@ -59,14 +62,15 @@
                                     Foreground="#37cb9a"
                                     IsEnabled="True" />
                                 <MenuItem Foreground="#c090e7" Header="☰" Padding="2" Margin="10,0,0,0">
-                                    <MenuItem Header="{x:Static assets:Strings.TitleText}" Foreground="#c090e7" FontSize="20"
+                                    <MenuItem Header="{loc:Loc TitleText}" Foreground="#c090e7" FontSize="20"
                                               StaysOpenOnClick="true" />
                                     <Separator />
-                                    <MenuItem Header="{x:Static assets:Strings.FileText}">
-                                        <MenuItem Header="{x:Static assets:Strings.NewFileText}" Command="{Binding FileNew}" />
-                                        <MenuItem Header="{x:Static assets:Strings.OpenFileText}" Command="{Binding FileOpen}" />
-                                        <MenuItem Header="{x:Static assets:Strings.SaveFileText}" Command="{Binding FileSave}" />
-                                        <MenuItem Header="{x:Static assets:Strings.CloseFileText}" Command="{Binding FileClose}" />
+                                    <MenuItem Header="{loc:Loc FileText}">
+                                        <MenuItem Header="{loc:Loc NewFileText}" Command="{Binding FileNew}" />
+                                        <MenuItem Header="{loc:Loc OpenFileText}" Command="{Binding FileOpen}" />
+                                        <MenuItem Header="Recent Files" x:Name="RecentFilesMenu"/>
+                                        <MenuItem Header="{loc:Loc SaveFileText}" Command="{Binding FileSave}" />
+                                        <MenuItem Header="{loc:Loc CloseFileText}" Command="{Binding FileClose}" />
                                         <!-- <Separator /> -->
                                         <!-- <MenuItem Header="临时运行游戏" IsEnabled="False" /> -->
                                         <!-- <MenuItem Header="使用调试器运行游戏" IsEnabled="False" /> -->
@@ -74,27 +78,27 @@
                                         <!-- <Separator /> -->
                                         <!-- <MenuItem Header="生成偏移值图谱" IsEnabled="False" /> -->
                                         <Separator />
-                                        <MenuItem Header="{x:Static assets:Strings.SettingsText}" Command="{Binding FileSettings}" />
-                                        <MenuItem Header="{x:Static assets:Strings.QuitText}" Command="{Binding FileExit}" />
+                                        <MenuItem Header="{loc:Loc SettingsText}" Command="{Binding FileSettings}" />
+                                        <MenuItem Header="{loc:Loc QuitText}" Command="{Binding FileExit}" />
                                     </MenuItem>
                                     <!-- <MenuItem Header="导入" IsEnabled="False"> -->
                                     <!-- </MenuItem> -->
                                     <!-- <MenuItem Header="导出" IsEnabled="False"> -->
                                     <!-- </MenuItem> -->
-                                    <MenuItem Header="{x:Static assets:Strings.SearchCodeText}">
-                                        <MenuItem Header="{x:Static assets:Strings.SearchCodeText}" Command="{Binding ToolsSearchInCode}" />
-                                        <MenuItem Header="{x:Static assets:Strings.Find_unused_assets}" IsEnabled="False" />
+                                    <MenuItem Header="{loc:Loc SearchCodeText}">
+                                        <MenuItem Header="{loc:Loc SearchCodeText}" Command="{Binding ToolsSearchInCode}" />
+                                        <MenuItem Header="{loc:Loc Find_unused_assets}" IsEnabled="False" />
                                     </MenuItem>
-                                    <MenuItem Header="{x:Static assets:Strings.ScriptText}">
-                                        <MenuItem Header="{x:Static assets:Strings.InnerScriptText}" ItemsSource="{Binding ScriptsSubMenuItems}" />
-                                        <MenuItem Header="{x:Static assets:Strings.ChooseScriptToRunText}" Command="{Binding ScriptsRunOtherScript}" />
+                                    <MenuItem Header="{loc:Loc ScriptText}">
+                                        <MenuItem Header="{loc:Loc InnerScriptText}" ItemsSource="{Binding ScriptsSubMenuItems}" />
+                                        <MenuItem Header="{loc:Loc ChooseScriptToRunText}" Command="{Binding ScriptsRunOtherScript}" />
                                     </MenuItem>
-                                    <MenuItem Header="{x:Static assets:Strings.HelpText}">
-                                        <MenuItem Header="{x:Static assets:Strings.GithubText}" Command="{Binding HelpGitHub}" />
-                                        <MenuItem Header="{x:Static assets:Strings.DonateText}" Command="{Binding Donate}" />
-                                        <MenuItem Header="{x:Static assets:Strings.QQGroupText}" Command="{Binding QQGroup}" />
-                                        <MenuItem Header="{x:Static assets:Strings.BilibiliText}" Command="{Binding Bilibili}" />
-                                        <MenuItem Header="{x:Static assets:Strings.AboutText}" Command="{Binding HelpAbout}" />
+                                    <MenuItem Header="{loc:Loc HelpText}">
+                                        <MenuItem Header="{loc:Loc GithubText}" Command="{Binding HelpGitHub}" />
+                                        <MenuItem Header="{loc:Loc DonateText}" Command="{Binding Donate}" />
+                                        <MenuItem Header="{loc:Loc QQGroupText}" Command="{Binding QQGroup}" />
+                                        <MenuItem Header="{loc:Loc BilibiliText}" Command="{Binding Bilibili}" />
+                                        <MenuItem Header="{loc:Loc AboutText}" Command="{Binding HelpAbout}" />
                                     </MenuItem>
                                 </MenuItem>  
                                 <MenuItem
@@ -112,7 +116,7 @@
                             </Menu>
                         </StackPanel>
                         <DockPanel LastChildFill="True">
-                            <TextBox Name="FilterTextBox" Watermark="{x:Static assets:Strings.FilterByCodeText}"
+                            <TextBox Name="FilterTextBox" Watermark="{loc:Loc FilterByCodeText}"
                                      TextChanged="FilterTextBox_TextChanged"
                                      Margin="0"
                                      Padding="2" />
@@ -165,7 +169,8 @@
                                 </Setter>
                                 <Setter Property="ContextMenu">
                                     <ContextMenu>
-                                        <MenuItem Header="{x:Static assets:Strings.CloseTabText}" Click="TabMenu_Close_Click" />
+                                        <MenuItem Header="{loc:Loc CloseTabText}" Click="TabMenu_Close_Click" />
+                                        <MenuItem Header="Detach Tab" Click="TabMenu_Detach_Click" />
                                     </ContextMenu>
                                 </Setter>
                                 <Setter Property="Padding">0</Setter>
@@ -181,19 +186,19 @@
                                                 <TextBlock Text="{Binding Heading}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:GeneralInfoViewModel">
-                                                <TextBlock Text="{x:Static assets:Strings.GeneralInfoTabHeading}" />
+                                                <TextBlock Text="{loc:Loc GeneralInfoTabHeading}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:GlobalInitScriptsViewModel">
-                                                <TextBlock Text="{x:Static assets:Strings.GlobalInitScriptsHeading}" />
+                                                <TextBlock Text="{loc:Loc GlobalInitScriptsHeading}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:GameEndScriptsViewModel">
-                                                <TextBlock Text="{x:Static assets:Strings.GameEndScriptsHeading}" />
+                                                <TextBlock Text="{loc:Loc GameEndScriptsHeading}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:SearchInCodeViewModel">
-                                                <TextBlock Text="{x:Static assets:Strings.SearchInCodeHeading}" />
+                                                <TextBlock Text="{loc:Loc SearchInCodeHeading}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:SettingsViewModel">
-                                                <TextBlock Text="{x:Static assets:Strings.SettingsHeading}" />
+                                                <TextBlock Text="{loc:Loc SettingsHeading}" />
                                             </DataTemplate>
                                             <!-- Resources -->
                                             <DataTemplate DataType="l:UndertaleAudioGroupViewModel">
@@ -289,7 +294,7 @@
                                             </DataTemplate>
                                             <DataTemplate DataType="l:DonateViewModel">
                                                 <TextBlock
-                                                    Text="{x:Static assets:Strings.Donate}" />
+                                                    Text="{loc:Loc Donate}" />
                                             </DataTemplate>
                                         </ContentControl.DataTemplates>
                                     </ContentControl>
@@ -455,10 +460,10 @@
                                     CornerRadius="3"
                                     Padding="10" Margin="20">
                                 <StackPanel Orientation="Horizontal">
-                                    <Button Name="ButtonOk" Foreground="#ffeeeeee" Content="{x:Static assets:Strings.OK}"/>
-                                    <Button Name="ButtonYes" Foreground="#ffeeeeee" Content="{x:Static assets:Strings.Yes}"/>
-                                    <Button Name="ButtonNo" Foreground="#ffeeeeee" Content="{x:Static assets:Strings.No}"/>
-                                    <Button Name="ButtonCancel" Foreground="#ffeeeeee" Content="{x:Static assets:Strings.Cancel}"/>
+                                    <Button Name="ButtonOk" Foreground="#ffeeeeee" Content="{loc:Loc OK}"/>
+                                    <Button Name="ButtonYes" Foreground="#ffeeeeee" Content="{loc:Loc Yes}"/>
+                                    <Button Name="ButtonNo" Foreground="#ffeeeeee" Content="{loc:Loc No}"/>
+                                    <Button Name="ButtonCancel" Foreground="#ffeeeeee" Content="{loc:Loc Cancel}"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
