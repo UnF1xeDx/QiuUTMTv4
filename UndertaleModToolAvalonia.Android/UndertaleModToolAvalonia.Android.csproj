@@ -37,4 +37,71 @@
     <ProjectReference Include="..\SoraEditor\SoraEditor.csproj" />
     <ProjectReference Include="..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" />
   </ItemGroup>
+
+  <!--
+    savedstate 1.4.0.2 已包含 KTX 类（ViewKt），但 savedstate-ktx 1.2.1.16 仍被
+    Activity.Ktx / Fragment.Ktx / Navigation.Common 作为传递依赖引入，导致 D8 报
+    "Type androidx.savedstate.ViewKt is defined multiple times" 错误。
+    ExcludeAssets="all" 无法排除传递依赖的 Android AAR，所以直接从 @(AndroidAarLibrary)
+    和 @(AndroidLibrary) 项中移除 savedstate-ktx.aar，阻止它被解压到 lp 目录。
+    关键：必须在 _ResolveLibraryProjectImports 之前移除，因为该 target 才是实际调用
+    ResolveLibraryProjectImports 任务解压 AAR 的地方（_ExtractLibraryProjectImports
+    仅读取 cache，依赖于 _ResolveLibraryProjectImports）。
+  -->
+  <Target Name="RemoveDuplicateSavedStateKtx" BeforeTargets="_ResolveLibraryProjectImports">
+    <ItemGroup>
+      <_SavedStateKtxAar Include="@(AndroidAarLibrary)"
+                         Condition="$([System.String]::Copy('%(Identity)').Contains('savedstate-ktx'))" />
+      <AndroidAarLibrary Remove="@(_SavedStateKtxAar)" />
+
+      <_SavedStateKtxLib Include="@(AndroidLibrary)"
+                         Condition="$([System.String]::Copy('%(Identity)').Contains('savedstate-ktx'))" />
+      <AndroidLibrary Remove="@(_SavedStateKtxLib)" />
+    </ItemGroup>
+    <Message Text="RemoveDuplicateSavedStateKtx: matched AARs = @(_SavedStateKtxAar->'%(Identity)', '; ')" Importance="high" />
+    <Message Text="RemoveDuplicateSavedStateKtx: matched Libs = @(_SavedStateKtxLib->'%(Identity)', '; ')" Importance="high" />
+  </Target>
+
+  <!--
+    When EmbedAssembliesIntoApk=false (FastDev mode), the _GetPrimaryCpuAbi target in
+    Xamarin.Android.Common.Debugging.targets queries the connected device/emulator via adb
+    and OVERWRITES AndroidSupportedAbis with only the device's primary ABI (e.g. x86_64).
+    This makes .__override__/assets contain only that single ABI's assemblies.
+    This target runs immediately after _GetPrimaryCpuAbi and restores AndroidSupportedAbis
+    so that all 64-bit ABIs (arm64-v8a and x86_64) are generated, regardless of the
+    connected device's ABI. This is necessary for action_build.bat which packages all ABIs
+    into genouka_patcher.ext for deployment to arbitrary devices.
+  -->
+  <Target Name="_ForceAllAbisAfterPrimaryCpuAbi" AfterTargets="_GetPrimaryCpuAbi" Condition=" '$(EmbedAssembliesIntoApk)' == 'false' ">
+    <PropertyGroup>
+      <AndroidSupportedAbis>arm64-v8a;x86_64</AndroidSupportedAbis>
+      <RuntimeIdentifier></RuntimeIdentifier>
+      <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    </PropertyGroup>
+    <Message Text="_ForceAllAbisAfterPrimaryCpuAbi: restored AndroidSupportedAbis=$(AndroidSupportedAbis)" Importance="high" />
+  </Target>
+
+  <!--
+    后备方案：在 _ExtractLibraryProjectImports 之后、_CompileDex 之前，使用 XmlPeek
+    读取 libraryprojectimports.cache，找到 savedstate-ktx.aar 对应的 lp 目录并删除。
+    如果上面的 Target 已生效，cache 中不会有 savedstate-ktx 条目，此 Target 不做任何事。
+  -->
+  <Target Name="RemoveDuplicateSavedStateKtxLp" AfterTargets="_ExtractLibraryProjectImports" BeforeTargets="_CompileDex">
+    <PropertyGroup>
+      <_LpCacheFile>$(IntermediateOutputPath)libraryprojectimports.cache</_LpCacheFile>
+    </PropertyGroup>
+    <XmlPeek XmlInputPath="$(_LpCacheFile)"
+             Condition="Exists('$(_LpCacheFile)')"
+             Query="//ExtractedDirectory[contains(@OriginalFile, 'savedstate-ktx')]/text()">
+      <Output TaskParameter="Result" ItemName="_SavedStateKtxLpRelDirs" />
+    </XmlPeek>
+    <ItemGroup>
+      <_SavedStateKtxLpAbsDirs Include="$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '%(Identity)'))"
+                               Condition="'%(Identity)' != ''" />
+    </ItemGroup>
+    <Message Text="RemoveDuplicateSavedStateKtxLp: found @(_SavedStateKtxLpAbsDirs->'%(Identity)', ', ')" Importance="high" />
+    <RemoveDir Directories="@(_SavedStateKtxLpAbsDirs)"
+               Condition="'%(Identity)' != ''"
+               ContinueOnError="true" />
+  </Target>
 </Project>

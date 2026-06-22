@@ -22,13 +22,15 @@
             <LastGenOutput>Strings.Designer.cs</LastGenOutput>
         </EmbeddedResource>
         <EmbeddedResource Update="Assets\Strings.zh.resx">
+            <LogicalName>UndertaleModToolAvalonia.Assets.Strings.resources</LogicalName>
         </EmbeddedResource>
         <EmbeddedResource Update="Assets\Strings.ja.resx">
+            <LogicalName>UndertaleModToolAvalonia.Assets.Strings.resources</LogicalName>
         </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <AvaloniaResource Include="Assets\**" Exclude="Assets\Strings.resx;Assets\Strings.zh.resx;Assets\Strings.ja.resx;Assets\GmlSpecEnglish.gmlspec;Assets\GmlSpecChinese.gmlspec" />
     </ItemGroup>
 
     <ItemGroup>
@@ -81,17 +83,6 @@
     <ItemGroup>
       <EmbeddedResource Include="Assets\GmlSpecEnglish.gmlspec" />
       <EmbeddedResource Include="Assets\GmlSpecChinese.gmlspec" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AvaloniaResource Update="Assets\Strings.resx">
-        <Generator>PublicResXFileCodeGenerator</Generator>
-        <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-      </AvaloniaResource>
-      <AvaloniaResource Update="Assets\Strings.zh.resx">
-      </AvaloniaResource>
-      <AvaloniaResource Update="Assets\Strings.ja.resx">
-      </AvaloniaResource>
     </ItemGroup>
 
     <ItemGroup>

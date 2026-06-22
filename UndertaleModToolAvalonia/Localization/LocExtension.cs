@@ -1,5 +1,6 @@
 using System;
 using Avalonia.Data;
+using Avalonia.Markup.Xaml;
 
 namespace UndertaleModToolAvalonia.Localization;
 
@@ -8,7 +9,7 @@ namespace UndertaleModToolAvalonia.Localization;
 /// Usage in XAML: {loc:Loc KeyName}
 /// Returns a binding to LocalizationSource.Instance[KeyName] that auto-updates on language change.
 /// </summary>
-public class LocExtension
+public class LocExtension : MarkupExtension
 {
     public string Key { get; }
 
@@ -17,12 +18,15 @@ public class LocExtension
         Key = key;
     }
 
-    public object ProvideValue(IServiceProvider serviceProvider)
+    public override object ProvideValue(IServiceProvider serviceProvider)
     {
+        // In Avalonia, the indexer path syntax is [key], not Item[key].
+        // The Binding class uses reflection-based binding by default,
+        // which supports string indexers.
         return new Binding
         {
             Source = LocalizationSource.Instance,
-            Path = $"Item[{Key}]",
+            Path = $"[{Key}]",
             Mode = BindingMode.OneWay,
         };
     }
