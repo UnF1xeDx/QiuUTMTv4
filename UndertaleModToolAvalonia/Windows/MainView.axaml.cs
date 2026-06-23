@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Models.TreeDataGrid;
@@ -11,6 +12,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using UndertaleModLib;
 using UndertaleModLib.Models;
 
@@ -18,9 +20,12 @@ namespace UndertaleModToolAvalonia;
 
 public partial class MainView : UserControl, IView
 {
+    private TaskCompletionSource<object?>? _overlayDialogTcs;
+
     public MainView()
     {
         InitializeComponent();
+        SizeChanged += (_, __) => UpdateAndroidTouchPadding();
 
         DataContextChanged += (_, __) =>
         {
@@ -59,6 +64,12 @@ public partial class MainView : UserControl, IView
                             x => x.Children)
                     }
                 };
+                // Expand root node by default for all platforms
+                vm.TreeDataGridData.CollectionChanged += (_, _) =>
+                {
+                    Dispatcher.UIThread.Post(ExpandRootNode, DispatcherPriority.Background);
+                };
+                Dispatcher.UIThread.Post(ExpandRootNode, DispatcherPriority.Background);
             }
         };
 
@@ -67,6 +78,15 @@ public partial class MainView : UserControl, IView
             if (DataContext is MainViewModel vm)
             {
                 vm.OnLoaded();
+            }
+            UpdateAndroidTouchPadding();
+
+            // Wire up drag-over detection for tab detach
+            var tabStrip = this.FindControl<TabStrip>("MainTabStrip");
+            if (tabStrip is not null)
+            {
+                DragDrop.SetAllowDrop(tabStrip, true);
+                tabStrip.AddHandler(DragDrop.DragOverEvent, TabStrip_DragOver);
             }
         };
     }
@@ -109,6 +129,11 @@ public partial class MainView : UserControl, IView
                         hierarchicalRow.IsExpanded = !hierarchicalRow.IsExpanded;
                     }
                     vm.TabOpen(item.Value);
+                    // On Android, when double-clicking enters a tab page (leaf node), switch to full view
+                    if (OperatingSystem.IsAndroid() && (item.Children is null || item.Children.Count == 0))
+                    {
+                        SetGri0State1(2);
+                    }
                 }
             }
         }
@@ -265,7 +290,7 @@ public partial class MainView : UserControl, IView
 
                 if (await vm.ShowMessageDialog($"Delete {resource}?\nNote that the code often references objects by ID, " +
                     $"so this operation is likely to break stuff because other items will shift up!",
-                    ok: false, yes: true, no: true) == MessageWindow.Result.Yes)
+                    ok: false, yes: true, no: true) == DialogResult.Yes)
                 {
                     vm.Data[resource.GetType()].Remove(resource);
 
@@ -309,6 +334,15 @@ public partial class MainView : UserControl, IView
         }
     }
 
+    private void TabStrip_DragOver(object? sender, DragEventArgs e)
+    {
+        if (DataContext is MainViewModel vm && sender is Control control)
+        {
+            var handler = control.FindResource("TabStripItemDropHandler") as TabStripItemDropHandler;
+            handler?.OnDragOver(sender, e, e.Data.Get("Context"), vm);
+        }
+    }
+
     private void TabMenu_Close_Click(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel vm)
@@ -326,18 +360,7 @@ public partial class MainView : UserControl, IView
 
     private void TabMenu_Detach_Click(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainViewModel vm)
-        {
-            if (e.Source is Control control)
-            {
-                TabStripItem? tabItem = control.FindLogicalAncestorOfType<TabStripItem>();
-                if (tabItem is not null && tabItem.DataContext is TabItemViewModel vmTabItem)
-                {
-                    var tabWindow = new TabWindow(vm, vmTabItem);
-                    tabWindow.Show();
-                }
-            }
-        }
+        // Tab detach is not supported on Android - tabs always stay in MainWindow
     }
 
     private async void CommandTextBox_KeyDown(object? sender, KeyEventArgs e)
@@ -349,12 +372,17 @@ public partial class MainView : UserControl, IView
                 vm.CommandTextBoxText = result?.ToString() ?? "";
             }
     }
-    
+
     private int _gri0State1 = 0;
 
     private void AdjustView_OnClick(object? sender, RoutedEventArgs e)
     {
-        _gri0State1 = (_gri0State1 + 1) % 3;
+        SetGri0State1((_gri0State1 + 1) % 3);
+    }
+
+    private void SetGri0State1(int state)
+    {
+        _gri0State1 = state;
         switch (_gri0State1)
         {
             case 0:
@@ -366,6 +394,32 @@ public partial class MainView : UserControl, IView
             case 2:
                 Grid0.ColumnDefinitions = new ColumnDefinitions("1*,Auto,3*");
                 break;
+        }
+        UpdateAndroidTouchPadding();
+    }
+
+    private void UpdateAndroidTouchPadding()
+    {
+        if (!OperatingSystem.IsAndroid())
+            return;
+
+        bool isPortrait = Bounds.Height > Bounds.Width;
+        bool shouldHavePadding = isPortrait && _gri0State1 == 0;
+
+        if (shouldHavePadding)
+            MainTreeDataGrid.Classes.Add("TouchPadding");
+        else
+            MainTreeDataGrid.Classes.Remove("TouchPadding");
+    }
+
+    private void ExpandRootNode()
+    {
+        if (MainTreeDataGrid.Source?.Rows is { } rows && rows.Count > 0)
+        {
+            if (rows[0] is HierarchicalRow<MainViewModel.TreeDataGridItem> hierarchicalRow)
+            {
+                hierarchicalRow.IsExpanded = true;
+            }
         }
     }
 
@@ -401,5 +455,107 @@ public partial class MainView : UserControl, IView
         {
             CustomBackgroundImage.Source = null;
         }
+    }
+
+    // Project menu click handlers
+    private void ProjectNew_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ProjectNew();
+    }
+
+    private void ProjectOpen_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ProjectOpen();
+    }
+
+    private void ProjectSave_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ProjectSave();
+    }
+
+    private void ProjectViewAssets_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ProjectViewAssets();
+    }
+
+    private void ProjectClose_Click(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.ProjectClose();
+    }
+
+    // IView overlay dialog implementations
+    private void SetOverlayActive(bool active)
+    {
+        if (DataContext is MainViewModel vm)
+            vm.IsOverlayActive = active;
+    }
+
+    public async Task<object?> ShowOverlayDialog(UserControl dialog)
+    {
+        _overlayDialogTcs = new TaskCompletionSource<object?>();
+        var overlay = this.Find<Panel>("DialogOverlay");
+        var content = this.Find<ContentControl>("DialogContent");
+
+        overlay.IsVisible = true;
+        content.Content = dialog;
+        SetOverlayActive(true);
+
+        if (dialog is IOverlayDialog overlayDialog)
+        {
+            overlayDialog.CloseRequested += () =>
+            {
+                overlay.IsVisible = false;
+                content.Content = null;
+                SetOverlayActive(false);
+                _overlayDialogTcs?.SetResult(null);
+                _overlayDialogTcs = null;
+            };
+        }
+
+        return await _overlayDialogTcs.Task;
+    }
+
+    public async Task<TResult> ShowOverlayDialog<TResult>(UserControl dialog, Func<TResult> getResult)
+    {
+        _overlayDialogTcs = new TaskCompletionSource<object?>();
+        var overlay = this.Find<Panel>("DialogOverlay");
+        var content = this.Find<ContentControl>("DialogContent");
+
+        overlay.IsVisible = true;
+        content.Content = dialog;
+        SetOverlayActive(true);
+
+        if (dialog is IOverlayDialog overlayDialog)
+        {
+            overlayDialog.CloseRequested += () =>
+            {
+                var result = getResult();
+                overlay.IsVisible = false;
+                content.Content = null;
+                SetOverlayActive(false);
+                _overlayDialogTcs?.SetResult(null);
+                _overlayDialogTcs = null;
+            };
+        }
+
+        await _overlayDialogTcs.Task;
+        return getResult();
+    }
+
+    public void CloseOverlayDialog()
+    {
+        var overlay = this.Find<Panel>("DialogOverlay");
+        var content = this.Find<ContentControl>("DialogContent");
+
+        overlay.IsVisible = false;
+        content.Content = null;
+        SetOverlayActive(false);
+        _overlayDialogTcs?.SetResult(null);
+        _overlayDialogTcs = null;
     }
 }

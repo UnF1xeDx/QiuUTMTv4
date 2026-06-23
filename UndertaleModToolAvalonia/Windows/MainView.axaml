@@ -81,6 +81,16 @@
                                         <MenuItem Header="{loc:Loc SettingsText}" Command="{Binding FileSettings}" />
                                         <MenuItem Header="{loc:Loc QuitText}" Command="{Binding FileExit}" />
                                     </MenuItem>
+                                    <MenuItem Header="{loc:Loc Menu_Project}">
+                                        <MenuItem Header="{loc:Loc Menu_Project_New}" Click="ProjectNew_Click"/>
+                                        <MenuItem Header="{loc:Loc Menu_Project_Open}" Click="ProjectOpen_Click"/>
+                                        <MenuItem Header="{loc:Loc Menu_Project_Save}" Click="ProjectSave_Click"
+                                                  IsEnabled="{Binding Project, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        <MenuItem Header="{loc:Loc Menu_Project_ViewUnexported}" Click="ProjectViewAssets_Click"
+                                                  IsEnabled="{Binding Project, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                        <MenuItem Header="{loc:Loc Menu_Project_Close}" Click="ProjectClose_Click"
+                                                  IsEnabled="{Binding Project, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                                    </MenuItem>
                                     <!-- <MenuItem Header="导入" IsEnabled="False"> -->
                                     <!-- </MenuItem> -->
                                     <!-- <MenuItem Header="导出" IsEnabled="False"> -->
@@ -128,15 +138,11 @@
                         <TreeDataGrid.Styles>
                             <Style Selector="TreeDataGridRow TreeDataGridExpanderCell"
                                    x:DataType="l:MainViewModel+TreeDataGridItem">
-                                <!-- <Setter Property="(Interaction.Behaviors)"> -->
-                                <!--     <BehaviorCollectionTemplate> -->
-                                <!--         <BehaviorCollection> -->
-                                <!--             <ContextDragBehavior /> -->
-                                <!--         </BehaviorCollection> -->
-                                <!--     </BehaviorCollectionTemplate> -->
-                                <!-- </Setter> -->
                                 <Setter Property="ContextMenu"
                                         Value="{Binding ., Converter={StaticResource TreeDataGridItemToContextMenuConverter}}" />
+                            </Style>
+                            <Style Selector="TreeDataGrid.TouchPadding TreeDataGridRow">
+                                <Setter Property="Margin" Value="0,6" />
                             </Style>
                         </TreeDataGrid.Styles>
                     </TreeDataGrid>
@@ -151,7 +157,8 @@
                               SelectedIndex="{Binding TabSelectedIndex}"
                               PointerReleased="TabControl_PointerReleased"
                               SelectionChanged="TabControl_SelectionChanged"
-                              Background="Transparent">
+                              Background="Transparent"
+                              x:Name="MainTabStrip">
                         <TabStrip.Resources>
                             <l:TabStripItemDropHandler x:Key="TabStripItemDropHandler" />
                         </TabStrip.Resources>
@@ -170,7 +177,6 @@
                                 <Setter Property="ContextMenu">
                                     <ContextMenu>
                                         <MenuItem Header="{loc:Loc CloseTabText}" Click="TabMenu_Close_Click" />
-                                        <MenuItem Header="Detach Tab" Click="TabMenu_Detach_Click" />
                                     </ContextMenu>
                                 </Setter>
                                 <Setter Property="Padding">0</Setter>
@@ -197,100 +203,103 @@
                                             <DataTemplate DataType="l:SearchInCodeViewModel">
                                                 <TextBlock Text="{loc:Loc SearchInCodeHeading}" />
                                             </DataTemplate>
+                                            <DataTemplate DataType="l:ProjectAssetsViewModel">
+                                                <TextBlock Text="Unexported Assets" />
+                                            </DataTemplate>
                                             <DataTemplate DataType="l:SettingsViewModel">
                                                 <TextBlock Text="{loc:Loc SettingsHeading}" />
                                             </DataTemplate>
                                             <!-- Resources -->
                                             <DataTemplate DataType="l:UndertaleAudioGroupViewModel">
                                                 <TextBlock
-                                                    Text="{Binding AudioGroup.Name.Content, StringFormat={x:Static assets:Strings.UndertaleAudioGroupViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleAudioGroupViewModelHeading, BindingPath=AudioGroup.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleSoundViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Sound.Name.Content, StringFormat={x:Static assets:Strings.UndertaleSoundViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleSoundViewModelHeading, BindingPath=Sound.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleSpriteViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Sprite.Name.Content, StringFormat={x:Static assets:Strings.UndertaleSpriteViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleSpriteViewModelHeading, BindingPath=Sprite.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleBackgroundViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Background.Name.Content, StringFormat={x:Static assets:Strings.UndertaleBackgroundViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleBackgroundViewModelHeading, BindingPath=Background.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertalePathViewModel">
-                                                <TextBlock Text="{Binding Path.Name.Content, StringFormat={x:Static assets:Strings.UndertalePathViewModelHeading}}" />
+                                                <TextBlock Text="{loc:LocFormat Key=UndertalePathViewModelHeading, BindingPath=Path.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleScriptViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Script.Name.Content, StringFormat={x:Static assets:Strings.UndertaleScriptViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleScriptViewModelHeading, BindingPath=Script.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleShaderViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Shader.Name.Content, StringFormat={x:Static assets:Strings.UndertaleShaderViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleShaderViewModelHeading, BindingPath=Shader.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleFontViewModel">
-                                                <TextBlock Text="{Binding Font.Name.Content, StringFormat={x:Static assets:Strings.UndertaleFontViewModelHeading}}" />
+                                                <TextBlock Text="{loc:LocFormat Key=UndertaleFontViewModelHeading, BindingPath=Font.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleTimelineViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Timeline.Name.Content, StringFormat={x:Static assets:Strings.UndertaleTimelineViewModelHeading}}" />
+                                                    Text="{loc:LocFormat Key=UndertaleTimelineViewModelHeading, BindingPath=Timeline.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleGameObjectViewModel">
                                                 <TextBlock
-                                                    Text="{Binding GameObject.Name.Content, StringFormat={x:Static assets:Strings.Game_object____0}}" />
+                                                    Text="{loc:LocFormat Key=Game_object____0, BindingPath=GameObject.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleRoomViewModel">
-                                                <TextBlock Text="{Binding Room.Name.Content, StringFormat={x:Static assets:Strings.Room____0}}" />
+                                                <TextBlock Text="{loc:LocFormat Key=Room____0, BindingPath=Room.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleExtensionViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Extension.Name.Content, StringFormat={x:Static assets:Strings.Extension____0}}" />
+                                                    Text="{loc:LocFormat Key=Extension____0, BindingPath=Extension.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleTexturePageItemViewModel">
                                                 <TextBlock
-                                                    Text="{Binding TexturePageItem.Name.Content, StringFormat={x:Static assets:Strings.Texture_page_item____0}}" />
+                                                    Text="{loc:LocFormat Key=Texture_page_item____0, BindingPath=TexturePageItem.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleCodeViewModel">
-                                                <TextBlock Text="{Binding Code.Name.Content, StringFormat={x:Static assets:Strings.Code____0}}" />
+                                                <TextBlock Text="{loc:LocFormat Key=Code____0, BindingPath=Code.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleVariableViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Variable.Name.Content, StringFormat={x:Static assets:Strings.Variable____0}}" />
+                                                    Text="{loc:LocFormat Key=Variable____0, BindingPath=Variable.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleFunctionViewModel">
                                                 <TextBlock
-                                                    Text="{Binding Function.Name.Content, StringFormat={x:Static assets:Strings.Function____0}}" />
+                                                    Text="{loc:LocFormat Key=Function____0, BindingPath=Function.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleCodeLocalsViewModel">
                                                 <TextBlock
-                                                    Text="{Binding CodeLocals.Name.Content, StringFormat={x:Static assets:Strings.Code_locals____0}}" />
+                                                    Text="{loc:LocFormat Key=Code_locals____0, BindingPath=CodeLocals.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleStringViewModel">
-                                                <TextBlock Text="{Binding String.Content, StringFormat={x:Static assets:Strings.String____0}}" />
+                                                <TextBlock Text="{loc:LocFormat Key=String____0, BindingPath=String.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleEmbeddedTextureViewModel">
                                                 <TextBlock
-                                                    Text="{Binding EmbeddedTexture.Name.Content, StringFormat={x:Static assets:Strings.Embedded_texture____0}}" />
+                                                    Text="{loc:LocFormat Key=Embedded_texture____0, BindingPath=EmbeddedTexture.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleEmbeddedAudioViewModel">
                                                 <TextBlock
-                                                    Text="{Binding EmbeddedAudio.Name.Content, StringFormat={x:Static assets:Strings.Embedded_audio____0}}" />
+                                                    Text="{loc:LocFormat Key=Embedded_audio____0, BindingPath=EmbeddedAudio.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleTextureGroupInfoViewModel">
                                                 <TextBlock
-                                                    Text="{Binding TextureGroupInfo.Name.Content, StringFormat={x:Static assets:Strings.Texture_group_information____0}}" />
+                                                    Text="{loc:LocFormat Key=Texture_group_information____0, BindingPath=TextureGroupInfo.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleEmbeddedImageViewModel">
                                                 <TextBlock
-                                                    Text="{Binding EmbeddedImage.Name.Content, StringFormat={x:Static assets:Strings.Embedded_image____0}}" />
+                                                    Text="{loc:LocFormat Key=Embedded_image____0, BindingPath=EmbeddedImage.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleParticleSystemViewModel">
                                                 <TextBlock
-                                                    Text="{Binding ParticleSystem.Name.Content, StringFormat={x:Static assets:Strings.Particle_system____0}}" />
+                                                    Text="{loc:LocFormat Key=Particle_system____0, BindingPath=ParticleSystem.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:UndertaleParticleSystemEmitterViewModel">
                                                 <TextBlock
-                                                    Text="{Binding ParticleSystemEmitter.Name.Content, StringFormat={x:Static assets:Strings.Particle_system_emitter____0}}" />
+                                                    Text="{loc:LocFormat Key=Particle_system_emitter____0, BindingPath=ParticleSystemEmitter.Name.Content}" />
                                             </DataTemplate>
                                             <DataTemplate DataType="l:DonateViewModel">
                                                 <TextBlock
@@ -412,6 +421,9 @@
                                             <DataTemplate DataType="l:SearchInCodeViewModel">
                                                 <l:SearchInCodeView />
                                             </DataTemplate>
+                                            <DataTemplate DataType="l:ProjectAssetsViewModel">
+                                                <l:ProjectAssetsView />
+                                            </DataTemplate>
                                             <DataTemplate DataType="l:SettingsViewModel">
                                                 <l:SettingsView />
                                             </DataTemplate>
@@ -427,7 +439,14 @@
                 </Grid>
             </Grid>
         </DockPanel>
-        <StackPanel Name="TextInputBox" IsVisible="False" Background="Transparent" MaxHeight="600">
+        <Panel Name="DialogOverlay" IsVisible="False" ZIndex="99">
+            <Border Background="#80000000" />
+            <ContentControl Name="DialogContent"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            MaxWidth="920" MaxHeight="720" />
+        </Panel>
+        <StackPanel Name="TextInputBox" IsVisible="False" Background="Transparent" MaxHeight="600" ZIndex="100">
             <StackPanel Margin="10" Background="#DD262626">
                 <Border BorderBrush="#DD353535"
                         BorderThickness="2"

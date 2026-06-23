@@ -8,8 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UndertaleModLib.Util;
-using ImageMagick;
-using ImageMagick.Drawing;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -272,8 +271,8 @@ public class Packer
         {
             string atlasName = $"{prefix}{atlasCount:000}.png";
             //1: Save images
-            using MagickImage img = CreateAtlasImage(atlas);
-            img.Write(atlasName, MagickFormat.Png);
+            using SKBitmap img = CreateAtlasImage(atlas);
+            TextureWorkerSkia.SaveImageToFile(img, atlasName);
             //2: save description in file
             foreach (Node n in atlas.Nodes)
             {
@@ -304,7 +303,7 @@ public class Packer
         FileInfo[] files = di.GetFiles(_Wildcard, SearchOption.AllDirectories);
         foreach (FileInfo fi in files)
         {
-            (int imgWidth, int imgHeight) = TextureWorker.GetImageSizeFromFile(fi.FullName);
+            (int imgWidth, int imgHeight) = TextureWorkerSkia.GetImageSizeFromFile(fi.FullName);
             if (imgWidth <= AtlasSize && imgHeight <= AtlasSize)
             {
                 TextureInfo ti = new TextureInfo();
@@ -440,21 +439,23 @@ public class Packer
         return textures;
     }
 
-    private MagickImage CreateAtlasImage(Atlas _Atlas)
+    private SKBitmap CreateAtlasImage(Atlas _Atlas)
     {
-        MagickImage atlas = new(MagickColors.Transparent, (uint)_Atlas.Width, (uint)_Atlas.Height);
-
-        foreach (Node n in _Atlas.Nodes)
+        SKBitmap atlas = new(_Atlas.Width, _Atlas.Height);
+        using (var canvas = new SKCanvas(atlas))
         {
-            if (n.Texture != null)
+            canvas.Clear(SKColors.Transparent);
+            foreach (Node n in _Atlas.Nodes)
             {
-                using (MagickImage src = new(n.Texture.Source))
+                if (n.Texture != null)
                 {
-                    atlas.Composite(src, n.Bounds.X, n.Bounds.Y, CompositeOperator.Over);
+                    using (SKBitmap src = TextureWorkerSkia.ReadBGRAImageFromFile(n.Texture.Source))
+                    {
+                        canvas.DrawBitmap(src, n.Bounds.X, n.Bounds.Y);
+                    }
                 }
             }
         }
-
         return atlas;
     }
 }

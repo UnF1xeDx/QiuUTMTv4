@@ -8,11 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UndertaleModLib.Util;
-using ImageMagick;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
-static List<MagickImage> imagesToCleanup = new();
+static List<SKBitmap> imagesToCleanup = new();
 bool importAsSprite = false;
 
 // TODO: see if this can be reimplemented using substring instead of regex?
@@ -51,12 +51,11 @@ try
     foreach (Atlas atlas in packer.Atlasses)
     {
         string atlasName = $"{prefix}{atlasCount:000}.png";
-        using MagickImage atlasImage = TextureWorker.ReadBGRAImageFromFile(atlasName);
-        IPixelCollection<byte> atlasPixels = atlasImage.GetPixels();
+        using SKBitmap atlasImage = TextureWorkerSkia.ReadBGRAImageFromFile(atlasName);
 
         UndertaleEmbeddedTexture texture = new();
         texture.Name = new UndertaleString($"Texture {++lastTextPage}");
-        texture.TextureData.Image = GMImage.FromMagickImage(atlasImage).ConvertToPng(); // TODO: other formats?
+        texture.TextureData.Image = GMImage.FromSkiaImage(SKImage.FromBitmap(atlasImage)); // TODO: other formats?
         Data.EmbeddedTextures.Add(texture);
 
         foreach (Node n in atlas.Nodes)
@@ -257,14 +256,14 @@ try
             {
                 for (int x = 0; x < maskWidth && x < maskNode.Bounds.Width; x++)
                 {
-                    IMagickColor<byte> pixelColor = atlasPixels.GetPixel(x + maskNode.Bounds.X, y + maskNode.Bounds.Y).ToColor();
+                    SKColor pixelColor = atlasImage.GetPixel(x + maskNode.Bounds.X, y + maskNode.Bounds.Y);
                     if (bboxMasks)
                     {
-                        maskingBitArray[(y * maskStride) + x] = (pixelColor.A > 0);
+                        maskingBitArray[(y * maskStride) + x] = (pixelColor.Alpha > 0);
                     }
                     else
                     {
-                        maskingBitArray[((y + maskNode.Texture.TargetY) * maskStride) + x + maskNode.Texture.TargetX] = (pixelColor.A > 0);
+                        maskingBitArray[((y + maskNode.Texture.TargetY) * maskStride) + x + maskNode.Texture.TargetX] = (pixelColor.Alpha > 0);
                     }
                 }
             }
@@ -294,7 +293,7 @@ try
 }
 finally
 {
-    foreach (MagickImage img in imagesToCleanup)
+    foreach (SKBitmap img in imagesToCleanup)
     {
         img.Dispose();
     }
@@ -309,7 +308,7 @@ public class TextureInfo
     public int TargetY;
     public int BoundingWidth;
     public int BoundingHeight;
-    public MagickImage Image;
+    public SKBitmap Image;
 }
 
 public enum SpriteType
@@ -353,6 +352,48 @@ public class Atlas
     public int Width;
     public int Height;
     public List<Node> Nodes;
+}
+
+// Find bounding box of non-transparent pixels
+static (int x, int y, int w, int h) GetBoundingBox(SKBitmap bmp)
+{
+    int minX = bmp.Width, minY = bmp.Height, maxX = -1, maxY = -1;
+    for (int y = 0; y < bmp.Height; y++)
+        for (int x = 0; x < bmp.Width; x++)
+            if (bmp.GetPixel(x, y).Alpha > 0)
+            {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+    if (maxX < 0) return (0, 0, 0, 0); // empty
+    return (minX, minY, maxX - minX + 1, maxY - minY + 1);
+}
+
+// Add 1px transparent border
+static SKBitmap AddBorder(SKBitmap src)
+{
+    var bmp = new SKBitmap(src.Width + 2, src.Height + 2);
+    using var canvas = new SKCanvas(bmp);
+    canvas.Clear(SKColors.Transparent);
+    canvas.DrawBitmap(src, 1, 1);
+    return bmp;
+}
+
+// Trim to bounding box
+static SKBitmap TrimBitmap(SKBitmap src)
+{
+    var (x, y, w, h) = GetBoundingBox(src);
+    if (w == 0 || h == 0)
+    {
+        // Empty sprite, return 1x1
+        return new SKBitmap(1, 1);
+    }
+    var result = new SKBitmap(w, h);
+    using var canvas = new SKCanvas(result);
+    canvas.DrawBitmap(src, new SKRectI(x, y, x + w, y + h), new SKRectI(0, 0, w, h));
+    return result;
 }
 
 public class Packer
@@ -437,8 +478,8 @@ public class Packer
             string atlasName = $"{prefix}{atlasCount:000}.png";
 
             // 1: Save images
-            using (MagickImage img = CreateAtlasImage(atlas))
-                TextureWorker.SaveImageToFile(img, atlasName);
+            using (SKBitmap img = CreateAtlasImage(atlas))
+                TextureWorkerSkia.SaveImageToFile(img, atlasName);
 
             // 2: save description in file
             foreach (Node n in atlas.Nodes)
@@ -470,7 +511,7 @@ public class Packer
         FileInfo[] files = di.GetFiles(_Wildcard, SearchOption.AllDirectories);
         foreach (FileInfo fi in files)
         {
-            (int width, int height) = TextureWorker.GetImageSizeFromFile(fi.FullName);
+            (int width, int height) = TextureWorkerSkia.GetImageSizeFromFile(fi.FullName);
             if (width == -1 || height == -1)
                 continue;
 
@@ -478,45 +519,51 @@ public class Packer
             {
                 TextureInfo ti = new();
 
-                MagickReadSettings settings = new()
-                {
-                    ColorSpace = ColorSpace.sRGB,
-                };
-                MagickImage img = new(fi.FullName);
+                SKBitmap img = TextureWorkerSkia.ReadBGRAImageFromFile(fi.FullName);
                 imagesToCleanup.Add(img);
 
                 ti.Source = fi.FullName;
-                ti.BoundingWidth = (int)img.Width;
-                ti.BoundingHeight = (int)img.Height;
+                ti.BoundingWidth = img.Width;
+                ti.BoundingHeight = img.Height;
 
                 // GameMaker doesn't trim tilesets. I assume it didn't trim backgrounds too
                 ti.TargetX = 0;
                 ti.TargetY = 0;
                 if (GetSpriteType(ti.Source) != SpriteType.Background)
                 {
-                    img.BorderColor = MagickColors.Transparent;
-                    img.BackgroundColor = MagickColors.Transparent;
-                    img.Border(1);
-                    IMagickGeometry? bbox = img.BoundingBox;
-                    if (bbox is not null)
+                    SKBitmap bordered = AddBorder(img);
+                    img.Dispose();
+                    img = bordered;
+                    imagesToCleanup.Remove(imagesToCleanup[imagesToCleanup.Count - 1]);
+                    imagesToCleanup.Add(img);
+
+                    var bbox = GetBoundingBox(img);
+                    if (bbox.w > 0 && bbox.h > 0)
                     {
-                        ti.TargetX = bbox.X - 1;
-                        ti.TargetY = bbox.Y - 1;
-                        // yes, .Trim() mutates the image...
+                        ti.TargetX = bbox.x - 1;
+                        ti.TargetY = bbox.y - 1;
+                        // yes, trimming mutates the image...
                         // it doesn't really matter though since it isn't written back or anything
-                        img.Trim();
+                        SKBitmap trimmed = TrimBitmap(img);
+                        img.Dispose();
+                        img = trimmed;
+                        imagesToCleanup.Remove(imagesToCleanup[imagesToCleanup.Count - 1]);
+                        imagesToCleanup.Add(img);
                     }
                     else
                     {
                         // Empty sprites should be 1x1
                         ti.TargetX = 0;
                         ti.TargetY = 0;
-                        img.Crop(1, 1);
+                        SKBitmap cropped = new SKBitmap(1, 1);
+                        img.Dispose();
+                        img = cropped;
+                        imagesToCleanup.Remove(imagesToCleanup[imagesToCleanup.Count - 1]);
+                        imagesToCleanup.Add(img);
                     }
-                    img.ResetPage();
                 }
-                ti.Width = (int)img.Width;
-                ti.Height = (int)img.Height;
+                ti.Width = img.Width;
+                ti.Height = img.Height;
                 ti.Image = img;
 
                 SourceTextures.Add(ti);
@@ -647,20 +694,22 @@ public class Packer
         return textures;
     }
 
-    private MagickImage CreateAtlasImage(Atlas _Atlas)
+    private SKBitmap CreateAtlasImage(Atlas _Atlas)
     {
-        MagickImage img = new(MagickColors.Transparent, (uint)_Atlas.Width, (uint)_Atlas.Height);
-
-        foreach (Node n in _Atlas.Nodes)
+        SKBitmap img = new(_Atlas.Width, _Atlas.Height);
+        using (var canvas = new SKCanvas(img))
         {
-            if (n.Texture is not null)
+            canvas.Clear(SKColors.Transparent);
+            foreach (Node n in _Atlas.Nodes)
             {
-                MagickImage sourceImg = n.Texture.Image;
-                using IMagickImage<byte> resizedSourceImg = TextureWorker.ResizeImage(sourceImg, n.Bounds.Width, n.Bounds.Height);
-                img.Composite(resizedSourceImg, n.Bounds.X, n.Bounds.Y, CompositeOperator.Copy);
+                if (n.Texture is not null)
+                {
+                    SKBitmap sourceImg = n.Texture.Image;
+                    using SKBitmap resizedSourceImg = TextureWorkerSkia.ResizeImage(sourceImg, n.Bounds.Width, n.Bounds.Height);
+                    canvas.DrawBitmap(resizedSourceImg, n.Bounds.X, n.Bounds.Y);
+                }
             }
         }
-
         return img;
     }
 }

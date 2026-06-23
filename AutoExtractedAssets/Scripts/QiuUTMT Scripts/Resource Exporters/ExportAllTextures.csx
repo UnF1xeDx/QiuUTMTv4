@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -27,7 +28,7 @@ Directory.CreateDirectory(bgrFolder);
 SetProgressBar(null, "Textures", 0, Data.TexturePageItems.Count);
 StartProgressBarUpdater();
 
-TextureWorker worker = null;
+TextureWorkerSkia worker = null;
 using (worker = new())
 {
     await DumpSprites();

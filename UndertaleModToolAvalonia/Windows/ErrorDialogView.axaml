@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="UndertaleModToolAvalonia.ErrorDialogView"
+             x:DataType="local:ErrorDialogView"
+             xmlns:local="clr-namespace:UndertaleModToolAvalonia"
+             Width="520" MinWidth="360">
+    <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" Padding="16,14" CornerRadius="4">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"
+                           Foreground="#FFD32F2F" FontFamily="Segoe UI Symbol">&#x26A0;</TextBlock>
+                <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
+                           VerticalAlignment="Center" MaxHeight="80"/>
+            </StackPanel>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                          Margin="0,0,0,10">
+                <TextBox Name="ErrorTextBox" IsReadOnly="True"
+                         Text="{Binding ErrorText, Mode=OneWay}" TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         FontFamily="Consolas,Courier New,monospace" FontSize="12"
+                         Padding="6,4,6,4" MaxHeight="200"/>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Copy All" Margin="0,0,8,0"
+                        Padding="12,4,12,4" Click="CopyAllButton_Click"/>
+                <Button Content="OK" IsDefault="True"
+                        Padding="16,4,16,4" Click="OKButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

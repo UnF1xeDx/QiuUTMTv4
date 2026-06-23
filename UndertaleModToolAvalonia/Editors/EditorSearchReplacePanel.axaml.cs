@@ -1,0 +1,354 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
+using AvaloniaEdit.Document;
+using AvaloniaEdit.Editing;
+using AvaloniaEdit.Rendering;
+
+namespace UndertaleModToolAvalonia.Editors;
+
+public partial class EditorSearchReplacePanel : UserControl
+{
+    private TextArea _textArea;
+    private SearchHighlightRenderer _renderer;
+    private List<(int StartOffset, int EndOffset)> _results = new();
+
+    public bool IsReplaceMode
+    {
+        get => ReplacePanel.IsVisible;
+        set => ReplacePanel.IsVisible = value;
+    }
+
+    public EditorSearchReplacePanel()
+    {
+        InitializeComponent();
+    }
+
+    public void Initialize(TextArea textArea)
+    {
+        _textArea = textArea;
+        _renderer = new SearchHighlightRenderer
+        {
+            MarkerBrush = new SolidColorBrush(Color.FromRgb(90, 90, 90))
+        };
+
+        textArea.DocumentChanged += TextArea_DocumentChanged;
+        if (textArea.Document is not null)
+            textArea.Document.TextChanged += Document_TextChanged;
+    }
+
+    private void TextArea_DocumentChanged(object? sender, EventArgs e)
+    {
+        if (_textArea.Document is not null)
+            _textArea.Document.TextChanged += Document_TextChanged;
+        DoSearch(false);
+    }
+
+    private void Document_TextChanged(object? sender, EventArgs e)
+    {
+        DoSearch(false);
+    }
+
+    public void Open(bool replaceMode = false)
+    {
+        IsVisible = true;
+        IsReplaceMode = replaceMode;
+
+        if (_textArea.Selection.Length > 0)
+        {
+            string selected = _textArea.Selection.GetText();
+            if (!selected.Contains('\n') && selected.Length <= 256)
+                SearchTextBox.Text = selected;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            SearchTextBox.Focus();
+            SearchTextBox.SelectAll();
+        });
+
+        if (!string.IsNullOrEmpty(SearchTextBox.Text))
+            DoSearch(true);
+    }
+
+    public void ClosePanel()
+    {
+        IsVisible = false;
+        _results.Clear();
+        _textArea.TextView.BackgroundRenderers.Remove(_renderer);
+        _textArea.TextView.InvalidateLayer(KnownLayer.Selection);
+        _textArea.Focus();
+    }
+
+    private void CloseButton_Click(object? sender, RoutedEventArgs e)
+    {
+        ClosePanel();
+    }
+
+    private void ToggleReplaceButton_Click(object? sender, RoutedEventArgs e)
+    {
+        IsReplaceMode = !IsReplaceMode;
+        if (IsReplaceMode)
+            ReplaceTextBox.Focus();
+        else
+            SearchTextBox.Focus();
+    }
+
+    private void SearchTextBox_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        DoSearch(true);
+    }
+
+    private void SearchTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                FindPrevious();
+            else
+                FindNext();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            ClosePanel();
+        }
+    }
+
+    private void ReplaceTextBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            ReplaceCurrent();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            ClosePanel();
+        }
+    }
+
+    private void FindNextButton_Click(object? sender, RoutedEventArgs e)
+    {
+        FindNext();
+    }
+
+    private void FindPrevButton_Click(object? sender, RoutedEventArgs e)
+    {
+        FindPrevious();
+    }
+
+    private void ReplaceButton_Click(object? sender, RoutedEventArgs e)
+    {
+        ReplaceCurrent();
+    }
+
+    private void ReplaceAllButton_Click(object? sender, RoutedEventArgs e)
+    {
+        ReplaceAll();
+    }
+
+    private void DoSearch(bool changeSelection)
+    {
+        if (!IsVisible)
+            return;
+
+        _results.Clear();
+        _renderer.Results.Clear();
+
+        if (string.IsNullOrEmpty(SearchTextBox.Text) || _textArea.Document is null)
+        {
+            _textArea.TextView.InvalidateLayer(KnownLayer.Selection);
+            return;
+        }
+
+        bool matchCase = MatchCaseButton.IsChecked ?? false;
+        bool wholeWords = WholeWordsButton.IsChecked ?? false;
+        bool useRegex = UseRegexButton.IsChecked ?? false;
+        string pattern = SearchTextBox.Text;
+
+        try
+        {
+            var regexOptions = matchCase ? RegexOptions.None : RegexOptions.IgnoreCase;
+            string regexPattern = useRegex ? pattern : Regex.Escape(pattern);
+            if (wholeWords)
+                regexPattern = @"\b" + regexPattern + @"\b";
+
+            var regex = new Regex(regexPattern, regexOptions);
+
+            int offset = _textArea.Caret.Offset;
+            if (changeSelection)
+                _textArea.ClearSelection();
+
+            foreach (Match match in regex.Matches(_textArea.Document.Text))
+            {
+                var result = (match.Index, match.Index + match.Length);
+                _results.Add(result);
+                _renderer.Results.Add(result);
+
+                if (changeSelection && match.Index >= offset)
+                {
+                    SelectResult(match.Index, match.Length);
+                    changeSelection = false;
+                }
+            }
+        }
+        catch (ArgumentException)
+        {
+            _textArea.TextView.InvalidateLayer(KnownLayer.Selection);
+            return;
+        }
+
+        if (!_textArea.TextView.BackgroundRenderers.Contains(_renderer))
+            _textArea.TextView.BackgroundRenderers.Add(_renderer);
+
+        _textArea.TextView.InvalidateLayer(KnownLayer.Selection);
+    }
+
+    private void FindNext()
+    {
+        if (_results.Count == 0)
+        {
+            DoSearch(true);
+            return;
+        }
+
+        int docLength = _textArea.Document.TextLength;
+        int caretOffset = Math.Min(_textArea.Caret.Offset, docLength);
+        int idx = _results.FindIndex(r => r.StartOffset > caretOffset && r.EndOffset <= docLength);
+        if (idx < 0)
+            idx = _results.FindIndex(r => r.EndOffset <= docLength);
+        if (idx < 0)
+        {
+            DoSearch(true);
+            return;
+        }
+
+        var next = _results[idx];
+        SelectResult(next.StartOffset, next.EndOffset - next.StartOffset);
+    }
+
+    private void FindPrevious()
+    {
+        if (_results.Count == 0)
+        {
+            DoSearch(true);
+            return;
+        }
+
+        int docLength = _textArea.Document.TextLength;
+        int caretOffset = Math.Min(_textArea.Caret.Offset, docLength);
+        int idx = _results.FindLastIndex(r => r.StartOffset < caretOffset && r.EndOffset <= docLength);
+        if (idx < 0)
+            idx = _results.FindLastIndex(r => r.EndOffset <= docLength);
+        if (idx < 0)
+        {
+            DoSearch(true);
+            return;
+        }
+
+        var prev = _results[idx];
+        SelectResult(prev.StartOffset, prev.EndOffset - prev.StartOffset);
+    }
+
+    private void SelectResult(int startOffset, int length)
+    {
+        int docLength = _textArea.Document.TextLength;
+        if (startOffset < 0 || startOffset > docLength)
+            startOffset = Math.Max(0, Math.Min(startOffset, docLength));
+        if (startOffset + length > docLength)
+            length = Math.Max(0, docLength - startOffset);
+
+        _textArea.Caret.Offset = startOffset;
+        _textArea.Selection = Selection.Create(_textArea, startOffset, startOffset + length);
+        _textArea.Caret.BringCaretToView();
+        _textArea.Caret.Show();
+    }
+
+    private void ReplaceCurrent()
+    {
+        if (string.IsNullOrEmpty(SearchTextBox.Text))
+            return;
+
+        if (_results.Count == 0)
+        {
+            DoSearch(true);
+            return;
+        }
+
+        string replacement = ReplaceTextBox.Text ?? "";
+        int caretOffset = _textArea.Caret.Offset;
+
+        int idx = _results.FindIndex(r => r.StartOffset == caretOffset);
+        if (idx < 0)
+            idx = 0;
+
+        var current = _results[idx];
+
+        int length = current.EndOffset - current.StartOffset;
+        _textArea.Document.Replace(current.StartOffset, length, replacement);
+        DoSearch(true);
+    }
+
+    private void ReplaceAll()
+    {
+        if (string.IsNullOrEmpty(SearchTextBox.Text))
+            return;
+
+        DoSearch(false);
+
+        if (_results.Count == 0)
+            return;
+
+        string replacement = ReplaceTextBox.Text ?? "";
+
+        using (_textArea.Document.RunUpdate())
+        {
+            int offsetAdjust = 0;
+            foreach (var result in _results)
+            {
+                int adjustedStart = result.StartOffset + offsetAdjust;
+                int length = result.EndOffset - result.StartOffset;
+                _textArea.Document.Replace(adjustedStart, length, replacement);
+                offsetAdjust += replacement.Length - length;
+            }
+        }
+
+        DoSearch(true);
+    }
+}
+
+public class SearchHighlightRenderer : IBackgroundRenderer
+{
+    public List<(int StartOffset, int EndOffset)> Results { get; } = new();
+    public IBrush MarkerBrush { get; set; } = new SolidColorBrush(Colors.LightGreen);
+    public double MarkerCornerRadius { get; set; } = 3.0;
+
+    public KnownLayer Layer => KnownLayer.Selection;
+
+    public void Draw(TextView textView, DrawingContext drawingContext)
+        {
+            if (textView.Document is null || Results.Count == 0)
+                return;
+
+            textView.EnsureVisualLines();
+
+            foreach (var result in Results)
+            {
+                var segment = new TextSegment { StartOffset = result.StartOffset, EndOffset = result.EndOffset };
+                foreach (var rect in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment))
+                {
+                    drawingContext.DrawRectangle(MarkerBrush, null, rect, MarkerCornerRadius, MarkerCornerRadius);
+                }
+            }
+        }
+}

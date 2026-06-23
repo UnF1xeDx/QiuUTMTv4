@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
@@ -41,5 +42,14 @@ public class TabStripItemDropHandler : DropHandlerBase
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Called from the TabStrip's DragOver event.
+    /// Tab detach is not supported on Android - tabs always stay in MainWindow.
+    /// </summary>
+    public void OnDragOver(object? sender, DragEventArgs e, object? sourceContext, object? targetContext)
+    {
+        // No-op: tab detach is disabled for Android compatibility
     }
 }

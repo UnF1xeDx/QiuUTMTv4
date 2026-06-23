@@ -1,9 +1,10 @@
-﻿using System.Text;
+using System.Text;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -16,7 +17,7 @@ if (texFolder is null)
 SetProgressBar(null, "Tilesets", 0, Data.Backgrounds.Count);
 StartProgressBarUpdater();
 
-TextureWorker worker = null;
+TextureWorkerSkia worker = null;
 using (worker = new())
 {
     await DumpTilesets();

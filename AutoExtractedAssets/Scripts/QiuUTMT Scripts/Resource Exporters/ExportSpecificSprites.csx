@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -42,7 +43,7 @@ foreach (string listElement in splitStringsList)
 SetProgressBar(null, "Sprites", 0, spritesToDump.Count);
 StartProgressBarUpdater();
 
-TextureWorker worker = null;
+TextureWorkerSkia worker = null;
 using (worker = new())
 {
     await Task.Run(() =>

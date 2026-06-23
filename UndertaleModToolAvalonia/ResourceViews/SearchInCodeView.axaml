@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,16 +6,16 @@
              x:Class="UndertaleModToolAvalonia.SearchInCodeView"
         xmlns:l="clr-namespace:UndertaleModToolAvalonia"
         x:DataType="l:SearchInCodeViewModel"
-        Classes="SearchInCodeView" xmlns:strings="clr-namespace:UndertaleModToolAvalonia.Assets" >
+        Classes="SearchInCodeView" xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization" >
     <Grid RowDefinitions="Auto,1*,Auto">
         <StackPanel Grid.Row="0">
             <TextBox Name="SearchTextTextBox" Text="{Binding SearchText}" AcceptsReturn="True"/>
             <StackPanel Orientation="Horizontal">
-                <CheckBox IsChecked="{Binding IsCaseSensitive}" Content="{x:Static strings:Strings.Case_sensitive}" />
-                <CheckBox IsChecked="{Binding IsRegexSearch}" Content="{x:Static strings:Strings.Regular_search}" />
-                <CheckBox IsChecked="{Binding IsInAssembly}" Content="{x:Static strings:Strings.Search_in_Assembly}" />
+                <CheckBox IsChecked="{Binding IsCaseSensitive}" Content="{loc:Loc Case_sensitive}" />
+                <CheckBox IsChecked="{Binding IsRegexSearch}" Content="{loc:Loc Regular_search}" />
+                <CheckBox IsChecked="{Binding IsInAssembly}" Content="{loc:Loc Search_in_Assembly}" />
             </StackPanel>
-            <Button Command="{Binding Search}" IsDefault="True" HorizontalAlignment="Right" Content="{x:Static strings:Strings.Search}" />
+            <Button Command="{Binding Search}" IsDefault="True" HorizontalAlignment="Right" Content="{loc:Loc Search}" />
         </StackPanel>
         <DataGrid Grid.Row="1" Name="ResultsDataGrid" ItemsSource="{Binding Results}" IsReadOnly="True" CanUserResizeColumns="True"
                   DoubleTapped="DataGrid_DoubleTapped">
@@ -23,15 +23,15 @@
                 <Style Selector="DataGridRow">
                     <Setter Property="ContextMenu">
                         <ContextMenu>
-                            <MenuItem Header="{x:Static strings:Strings.Open}" Click="DataGridRow1_Open_Click"/>
-                            <MenuItem Header="{x:Static strings:Strings.Open_in_new_tab}" Click="DataGridRow1_OpenInNewTab_Click"/>
+                            <MenuItem Header="{loc:Loc Open}" Click="DataGridRow1_Open_Click"/>
+                            <MenuItem Header="{loc:Loc Open_in_new_tab}" Click="DataGridRow1_OpenInNewTab_Click"/>
                         </ContextMenu>
                     </Setter>
                 </Style>
             </DataGrid.Styles>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{x:Static strings:Strings.Position}" Binding="{Binding Location}" Width="Auto" />
-                <DataGridTextColumn Header="{x:Static strings:Strings.Text}" Binding="{Binding Text}" Width="Auto" />
+                <DataGridTextColumn Header="{loc:Loc Position}" Binding="{Binding Location}" Width="Auto" />
+                <DataGridTextColumn Header="{loc:Loc Text}" Binding="{Binding Text}" Width="Auto" />
             </DataGrid.Columns>
         </DataGrid>
         <TextBlock Grid.Row="2" Text="{Binding StatusBarText}" Classes="StatusBar"/>

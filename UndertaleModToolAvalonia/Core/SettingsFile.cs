@@ -298,9 +298,9 @@ public partial class SettingsFile
     [Notify] private bool _CodeEditorShowHoverInfo = true;
     [Notify] private bool _RecompileAllCodeSourcesOnProjectSave = false;
 
-    public string BackgroundImagePath { get; set; } = "";
-    public double BackgroundOpacity { get; set; } = 0.3;
-    public string BackgroundStretchMode { get; set; } = "UniformToFill";
+    [Notify] private string _BackgroundImagePath = "";
+    [Notify] private double _BackgroundOpacity = 0.3;
+    [Notify] private string _BackgroundStretchMode = "UniformToFill";
 
     public List<string> RecentFiles { get; set; } = [];
 

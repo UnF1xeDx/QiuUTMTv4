@@ -216,8 +216,8 @@
         </Style>
     </Style>
 
-    <Style Selector="Window.MessageWindow, Window.TextBoxWindow">
-        <Setter Property="Padding" Value="16,0,16,16" />
+    <Style Selector="StackPanel.TextInputBox">
+        <Setter Property="Margin" Value="16,0,16,16" />
 
         <Style Selector="^ TextBlock#MessageText">
             <Setter Property="Margin" Value="0,16,0,0" />
@@ -236,16 +236,12 @@
         </Style>
     </Style>
 
-    <Style Selector="Window.LoaderWindow">
-        <Setter Property="Padding" Value="16" />
-
-        <Style Selector="^ ProgressBar#LoadingProgressBar">
-            <Setter Property="Margin" Value="0,8,0,0" />
-            <Setter Property="MinHeight" Value="16" />
-        </Style>
+    <Style Selector="StackPanel.TextInputBox ProgressBar#TextBoxLoadingProgressBar">
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="MinHeight" Value="16" />
     </Style>
 
-    <Style Selector="Window.SearchInCodeWindow,undertaleModToolAvalonia|SearchInCodeView">
+    <Style Selector="undertaleModToolAvalonia|SearchInCodeView">
         <Style Selector="^ > Grid > StackPanel">
             <Setter Property="Margin" Value="8" />
         </Style>

@@ -2,68 +2,82 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:strings="using:UndertaleModToolAvalonia.Assets"
              xmlns:l="clr-namespace:UndertaleModToolAvalonia"
              xmlns:undertalem="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
              xmlns:AvaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+             xmlns:editors="clr-namespace:UndertaleModToolAvalonia.Editors"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.UndertaleCodeView"
-             x:DataType="l:UndertaleCodeViewModel" xmlns:strings1="clr-namespace:UndertaleModToolAvalonia.Assets"
+             x:DataType="l:UndertaleCodeViewModel" xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization"
              xmlns:nativeViews="clr-namespace:UndertaleModToolAvalonia.NativeViews">
     <Grid RowDefinitions="Auto,Auto,1*" ColumnDefinitions="1*" MaxHeight="{Binding $parent[ContentControl].Bounds.Height}">
         <Grid Grid.Row="0" ColumnDefinitions="1*,Auto" Classes="PaddedProperties">
             <Grid Grid.Column="0" l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static strings:Strings.Name}"></Label>
+                <Label Content="{loc:Loc Name}"></Label>
                 <l:UndertaleStringReferenceView Reference="{Binding Code.Name}" />
 
-                <Label Content="{x:Static strings1:Strings.ParentCode}"></Label>
+                <Label Content="{loc:Loc ParentCode}"></Label>
                 <l:UndertaleResourceReferenceView Reference="{Binding Code.ParentEntry}" ReferenceType="undertalem:UndertaleGameObject" />
             </Grid>
-            <Button Grid.Column="1" Command="{Binding CompileAndDecompileGML}" Content="{x:Static strings1:Strings.Compile_and_decompile}"></Button>
+            <Button Grid.Column="1" Command="{Binding CompileAndDecompileGML}" Content="{loc:Loc Compile_and_decompile}"></Button>
         </Grid>
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="8,2,8,2">
             <CheckBox x:Name="WordWrapCheck" Content="Word Wrap" IsChecked="False" IsVisible="False" />
             <CheckBox x:Name="ShowWhitespaceCheck" Content="Show Whitespace" IsChecked="False" IsVisible="False" />
         </StackPanel>
         
-        <TabControl Grid.Row="2" IsVisible="{Binding Code.ParentEntry, Converter={x:Static ObjectConverters.IsNull}}"
+        <!-- Classic (AvaloniaEdit) TabControl -->
+        <TabControl Grid.Row="2" Name="ClassicTabControl"
+                    IsVisible="False"
                     SelectedIndex="{Binding SelectedTab}">
             <TabItem Header="GML" Name="ClassicGmlTab">
                 <ThemeVariantScope RequestedThemeVariant="Dark">
-                    <AvaloniaEdit:TextEditor x:Name="GMLTextEditor"
-                                             Document="{Binding GMLTextDocument}"
-                                             LostFocus="GMLTextEditor_LostFocus"
-                                             TextChanged="GMLTextEditor_TextChanged"
-                                             ShowLineNumbers="True"
-                                             Background="#FF282828"
-                                             FontFamily="Consolas,Liberation Mono,Menlo">
-                        <AvaloniaEdit:TextEditor.KeyBindings>
-                            <KeyBinding Gesture="Ctrl+K" Command="{Binding CompileAndDecompileGML}" />
-                        </AvaloniaEdit:TextEditor.KeyBindings>
-                    </AvaloniaEdit:TextEditor>
+                    <Grid>
+                        <AvaloniaEdit:TextEditor x:Name="GMLTextEditor"
+                                                 Document="{Binding GMLTextDocument}"
+                                                 LostFocus="GMLTextEditor_LostFocus"
+                                                 TextChanged="GMLTextEditor_TextChanged"
+                                                 ShowLineNumbers="True"
+                                                 Background="#FF282828"
+                                                 FontFamily="Consolas,Liberation Mono,Menlo">
+                            <AvaloniaEdit:TextEditor.KeyBindings>
+                                <KeyBinding Gesture="Ctrl+K" Command="{Binding CompileAndDecompileGML}" />
+                            </AvaloniaEdit:TextEditor.KeyBindings>
+                        </AvaloniaEdit:TextEditor>
+                        <editors:EditorSearchReplacePanel x:Name="GMLSearchPanel" />
+                    </Grid>
                 </ThemeVariantScope>
             </TabItem>
             <TabItem Header="ASM" Name="ClassicAsmTab">
                 <ThemeVariantScope RequestedThemeVariant="Dark">
-                    <AvaloniaEdit:TextEditor x:Name="ASMTextEditor"
-                                             Document="{Binding ASMTextDocument}"
-                                             LostFocus="ASMTextEditor_LostFocus"
-                                             TextChanged="ASMTextEditor_TextChanged"
-                                             ShowLineNumbers="True"
-                                             Background="#FF282828"
-                                             FontFamily="Consolas,Liberation Mono,Menlo">
-                        <AvaloniaEdit:TextEditor.KeyBindings>
-                            <KeyBinding Gesture="Ctrl+K" Command="{Binding CompileAndDecompileASM}" />
-                        </AvaloniaEdit:TextEditor.KeyBindings>
-                    </AvaloniaEdit:TextEditor>
+                    <Grid>
+                        <AvaloniaEdit:TextEditor x:Name="ASMTextEditor"
+                                                 Document="{Binding ASMTextDocument}"
+                                                 LostFocus="ASMTextEditor_LostFocus"
+                                                 TextChanged="ASMTextEditor_TextChanged"
+                                                 ShowLineNumbers="True"
+                                                 Background="#FF282828"
+                                                 FontFamily="Consolas,Liberation Mono,Menlo">
+                            <AvaloniaEdit:TextEditor.KeyBindings>
+                                <KeyBinding Gesture="Ctrl+K" Command="{Binding CompileAndDecompileASM}" />
+                            </AvaloniaEdit:TextEditor.KeyBindings>
+                        </AvaloniaEdit:TextEditor>
+                        <editors:EditorSearchReplacePanel x:Name="ASMSearchPanel" />
+                    </Grid>
                 </ThemeVariantScope>
             </TabItem>
-            <!-- SoraEditor -->
+        </TabControl>
+
+        <!-- SoraEditor TabControl -->
+        <TabControl Grid.Row="2" Name="SoraEditorTabControl"
+                    IsVisible="False"
+                    SelectedIndex="{Binding SelectedTab}">
             <TabItem Header="GML" Name="SoraEditorGmlTab">
                 <ThemeVariantScope RequestedThemeVariant="Dark">
                     <nativeViews:SoraEditorControl x:Name="GMLTextEditorSora"
-                                                   Document="{Binding ASMTextDocument}"
-                                                   LostFocus="GMLTextEditor_LostFocus">
+                                                   Document="{Binding GMLTextDocument}"
+                                                   LostFocus="GMLTextEditor_LostFocus"
+                                                   TextChanged="GMLTextEditor_TextChanged">
                     </nativeViews:SoraEditorControl>
                 </ThemeVariantScope>
             </TabItem>
@@ -71,7 +85,8 @@
                 <ThemeVariantScope RequestedThemeVariant="Dark">
                     <nativeViews:SoraEditorControl x:Name="ASMTextEditorSora"
                                                    Document="{Binding ASMTextDocument}"
-                                                   LostFocus="GMLTextEditor_LostFocus">
+                                                   LostFocus="ASMTextEditor_LostFocus"
+                                                   TextChanged="ASMTextEditor_TextChanged">
                     </nativeViews:SoraEditorControl>
                 </ThemeVariantScope>
             </TabItem>

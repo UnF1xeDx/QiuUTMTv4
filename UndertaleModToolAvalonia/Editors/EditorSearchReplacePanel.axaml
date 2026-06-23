@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="UndertaleModToolAvalonia.Editors.EditorSearchReplacePanel"
+             HorizontalAlignment="Right" VerticalAlignment="Top"
+             Margin="0,4,4,0"
+             IsVisible="False">
+    <Border Background="#FF2D2D2D"
+            BorderBrush="#FF4A4A4A"
+            BorderThickness="1" Padding="4" CornerRadius="2">
+        <StackPanel>
+            <DockPanel>
+                <Button DockPanel.Dock="Right" x:Name="CloseButton" Width="20" Height="20" Margin="4,0,0,0"
+                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                        Click="CloseButton_Click"
+                        Background="Transparent" BorderThickness="0">
+                    <Path Data="M 0,0 L 8,8 M 8,0 L 0,8" Stroke="#FFC0C0C0" StrokeThickness="1.5"/>
+                </Button>
+                <Button DockPanel.Dock="Right" x:Name="ToggleReplaceButton" Width="20" Height="20" Margin="2,0"
+                        VerticalContentAlignment="Center" HorizontalContentAlignment="Center"
+                        Click="ToggleReplaceButton_Click"
+                        Background="Transparent" BorderThickness="0">
+                    <Path Data="M 2,6 L 10,6 M 6,2 L 6,10" Stroke="#FFC0C0C0" StrokeThickness="1.5"/>
+                </Button>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox x:Name="SearchTextBox" Width="180" Height="24" Margin="0,0,4,0"
+                             VerticalContentAlignment="Center" VerticalAlignment="Center"
+                             TextChanged="SearchTextBox_TextChanged" KeyDown="SearchTextBox_KeyDown"/>
+                    <Button x:Name="FindPrevButton" Width="24" Height="24" Margin="0,0,2,0" Click="FindPrevButton_Click"
+                            Background="Transparent" BorderThickness="0">
+                        <Path Data="M 4,8 L 10,4 M 4,8 L 10,12" Stroke="#FFC0C0C0" StrokeThickness="1.5"/>
+                    </Button>
+                    <Button x:Name="FindNextButton" Width="24" Height="24" Margin="0,0,4,0" Click="FindNextButton_Click"
+                            Background="Transparent" BorderThickness="0">
+                        <Path Data="M 10,8 L 4,4 M 10,8 L 4,12" Stroke="#FFC0C0C0" StrokeThickness="1.5"/>
+                    </Button>
+                    <ToggleButton x:Name="MatchCaseButton" Width="24" Height="24" Margin="0,0,2,0"
+                                  FontSize="12" FontWeight="Bold" Content="Aa"
+                                  Foreground="#FFC0C0C0" Background="Transparent" BorderBrush="#FF4A4A4A"/>
+                    <ToggleButton x:Name="WholeWordsButton" Width="24" Height="24" Margin="0,0,2,0"
+                                  FontSize="12" FontWeight="Bold" Content="W"
+                                  Foreground="#FFC0C0C0" Background="Transparent" BorderBrush="#FF4A4A4A"/>
+                    <ToggleButton x:Name="UseRegexButton" Width="24" Height="24"
+                                  FontSize="11" FontWeight="Bold" Content=".*"
+                                  Foreground="#FFC0C0C0" Background="Transparent" BorderBrush="#FF4A4A4A"/>
+                </StackPanel>
+            </DockPanel>
+            <DockPanel x:Name="ReplacePanel" Margin="0,4,0,0" IsVisible="False">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="4,0,0,0">
+                    <Button x:Name="ReplaceButton" Width="48" Height="24" Margin="0,0,2,0" Click="ReplaceButton_Click"
+                            Content="Replace" FontSize="11"/>
+                    <Button x:Name="ReplaceAllButton" Width="60" Height="24" Click="ReplaceAllButton_Click"
+                            Content="Replace All" FontSize="11"/>
+                </StackPanel>
+                <TextBox x:Name="ReplaceTextBox" Height="24" VerticalContentAlignment="Center"
+                         KeyDown="ReplaceTextBox_KeyDown"/>
+            </DockPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

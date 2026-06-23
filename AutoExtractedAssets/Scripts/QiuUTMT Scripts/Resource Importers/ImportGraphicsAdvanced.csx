@@ -15,20 +15,18 @@
 // revision 5: handle breaking Magick.NET changes, disabled animation speed options in GMS1 games, hi-DPI support,
 // renamed from ImportGraphicsWithParametersPlus to ImportGraphicsAdvanced
 // revision 6: sprite texture items are now cropped, to save on texture page space and to fix sprite fonts
+// revision 7: ported from Magick.NET to SkiaSharp, removed WinForms dependencies for Android compatibility
 
 using System;
 using System.IO;
-using System.Drawing;
 using System.Collections;
-using System.IO.Compression;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UndertaleModLib.Util;
 using UndertaleModLib.Models;
-using System.Windows.Forms;
-using ImageMagick;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -39,7 +37,7 @@ string[] offsets = { "Top Left", "Top Center", "Top Right", "Center Left", "Cent
 
 string[] playbacks = { "Frames Per Second", "Frames Per Game Frame" };
 
-static List<MagickImage> imagesToCleanup = new();
+static List<SKBitmap> imagesToCleanup = new();
 
 float animSpd = 1;
 
@@ -83,12 +81,11 @@ try
     foreach (Atlas atlas in packer.Atlasses)
     {
         string atlasName = $"{prefix}{atlasCount:000}.png";
-        using MagickImage atlasImage = TextureWorker.ReadBGRAImageFromFile(atlasName);
-        IPixelCollection<byte> atlasPixels = atlasImage.GetPixels();
+        using SKBitmap atlasImage = TextureWorkerSkia.ReadBGRAImageFromFile(atlasName);
 
         UndertaleEmbeddedTexture texture = new();
         texture.Name = new UndertaleString($"Texture {++lastTextPage}");
-        texture.TextureData.Image = GMImage.FromMagickImage(atlasImage).ConvertToPng(); // TODO: other formats?
+        texture.TextureData.Image = GMImage.FromSkiaImage(SKImage.FromBitmap(atlasImage)); // TODO: other formats?
         Data.EmbeddedTextures.Add(texture);
         foreach (Node n in atlas.Nodes)
         {
@@ -380,14 +377,14 @@ try
             {
                 for (int x = 0; x < maskWidth && x < maskNode.Bounds.Width; x++)
                 {
-                    IMagickColor<byte> pixelColor = atlasPixels.GetPixel(x + maskNode.Bounds.X, y + maskNode.Bounds.Y).ToColor();
+                    SKColor pixelColor = atlasImage.GetPixel(x + maskNode.Bounds.X, y + maskNode.Bounds.Y);
                     if (bboxMasks)
                     {
-                        maskingBitArray[(y * maskStride) + x] = (pixelColor.A > 0);
+                        maskingBitArray[(y * maskStride) + x] = (pixelColor.Alpha > 0);
                     }
                     else
                     {
-                        maskingBitArray[((y + maskNode.Texture.TargetY) * maskStride) + x + maskNode.Texture.TargetX] = (pixelColor.A > 0);
+                        maskingBitArray[((y + maskNode.Texture.TargetY) * maskStride) + x + maskNode.Texture.TargetX] = (pixelColor.Alpha > 0);
                     }
                 }
             }
@@ -417,7 +414,7 @@ try
 }
 finally
 {
-    foreach (MagickImage img in imagesToCleanup)
+    foreach (SKBitmap img in imagesToCleanup)
     {
         img.Dispose();
     }
@@ -432,7 +429,7 @@ public class TextureInfo
     public int TargetY;
     public int BoundingWidth;
     public int BoundingHeight;
-    public MagickImage Image;
+    public SKBitmap Image;
 }
 
 public enum SpriteType
@@ -476,6 +473,41 @@ public class Atlas
     public int Width;
     public int Height;
     public List<Node> Nodes;
+}
+
+static (int x, int y, int w, int h) GetBoundingBox(SKBitmap bmp)
+{
+    int minX = bmp.Width, minY = bmp.Height, maxX = -1, maxY = -1;
+    for (int y = 0; y < bmp.Height; y++)
+        for (int x = 0; x < bmp.Width; x++)
+            if (bmp.GetPixel(x, y).Alpha > 0)
+            {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+    if (maxX < 0) return (0, 0, 0, 0);
+    return (minX, minY, maxX - minX + 1, maxY - minY + 1);
+}
+
+static SKBitmap AddBorder(SKBitmap src)
+{
+    var bmp = new SKBitmap(src.Width + 2, src.Height + 2);
+    using var canvas = new SKCanvas(bmp);
+    canvas.Clear(SKColors.Transparent);
+    canvas.DrawBitmap(src, 1, 1);
+    return bmp;
+}
+
+static SKBitmap TrimBitmap(SKBitmap src)
+{
+    var (x, y, w, h) = GetBoundingBox(src);
+    if (w == 0 || h == 0) return new SKBitmap(1, 1);
+    var result = new SKBitmap(w, h);
+    using var canvas = new SKCanvas(result);
+    canvas.DrawBitmap(src, new SKRectI(x, y, x + w, y + h), new SKRectI(0, 0, w, h));
+    return result;
 }
 
 public class Packer
@@ -560,8 +592,8 @@ public class Packer
             string atlasName = $"{prefix}{atlasCount:000}.png";
 
             // 1: Save images
-            using (MagickImage img = CreateAtlasImage(atlas))
-                TextureWorker.SaveImageToFile(img, atlasName);
+            using (SKBitmap img = CreateAtlasImage(atlas))
+                TextureWorkerSkia.SaveImageToFile(img, atlasName);
 
             // 2: save description in file
             foreach (Node n in atlas.Nodes)
@@ -600,34 +632,22 @@ public class Packer
 
             if (ext == ".gif")
             {
-                // animated .gif
+                // animated .gif - SkiaSharp does not support animated GIFs natively
+                // Load first frame only and warn
                 string dirName = Path.GetDirectoryName(fi.FullName);
                 string spriteName = Path.GetFileNameWithoutExtension(fi.FullName);
 
-                MagickReadSettings settings = new()
-                {
-                    ColorSpace = ColorSpace.sRGB,
-                };
-                using MagickImageCollection gif = new(fi.FullName, settings);
-                int frames = gif.Count;
-                if (!isSprite && frames > 1)
-                {
-                    throw new ScriptException(fi.FullName + " is a " + spriteType + ", but has more than 1 frame. Script has been stopped.");
-                }
+                ScriptMessage("Warning: Animated GIF import is not supported with SkiaSharp. Only the first frame of '" + fi.Name + "' will be imported.");
 
-                for (int i = frames - 1; i >= 0; i--)
-                {
-                    AddSource(
-                        (MagickImage)gif[i],
-                        Path.Join(
-                            dirName,
-                            isSprite ?
-                                (spriteName + "_" + i + ".png") : (spriteName + ".png")
-                        )
-                    );
-                    // don't auto-dispose
-                    gif.RemoveAt(i);
-                }
+                SKBitmap img = TextureWorkerSkia.ReadBGRAImageFromFile(fi.FullName);
+                AddSource(
+                    img,
+                    Path.Join(
+                        dirName,
+                        isSprite ?
+                            (spriteName + "_0.png") : (spriteName + ".png")
+                    )
+                );
             }
             else if (ext == ".png")
             {
@@ -660,11 +680,7 @@ public class Packer
                         throw new ScriptException(fi.FullName + " is not a sprite, but has more than 1 frame. Script has been stopped.");
                     }
 
-                    MagickReadSettings settings = new()
-                    {
-                        ColorSpace = ColorSpace.sRGB,
-                    };
-                    using MagickImage img = new(fi.FullName, settings);
+                    using SKBitmap img = TextureWorkerSkia.ReadBGRAImageFromFile(fi.FullName);
                     if ((img.Width % frames) > 0)
                     {
                         throw new ScriptException(fi.FullName + " has a width not divisible by the number of frames. Script has been stopped.");
@@ -676,10 +692,15 @@ public class Packer
                     uint frameHeight = (uint)img.Height;
                     for (uint i = 0; i < frames; i++)
                     {
+                        var subset = new SKBitmap((int)frameWidth, (int)frameHeight);
+                        using (var canvas = new SKCanvas(subset))
+                        {
+                            canvas.DrawBitmap(img,
+                                new SKRectI((int)(frameWidth * i), 0, (int)(frameWidth * (i + 1)), (int)frameHeight),
+                                new SKRectI(0, 0, (int)frameWidth, (int)frameHeight));
+                        }
                         AddSource(
-                            (MagickImage)img.Clone(
-                                (int)(frameWidth * i), 0, frameWidth, frameHeight
-                            ),
+                            subset,
                             Path.Join(dirName,
                                 isSprite ?
                                     (spriteName + "_" + i + ".png") : (spriteName + ".png")
@@ -689,18 +710,14 @@ public class Packer
                 }
                 else
                 {
-                    MagickReadSettings settings = new()
-                    {
-                        ColorSpace = ColorSpace.sRGB,
-                    };
-                    MagickImage img = new(fi.FullName);
+                    SKBitmap img = TextureWorkerSkia.ReadBGRAImageFromFile(fi.FullName);
                     AddSource(img, fi.FullName);
                 }
             }
         }
     }
 
-    private void AddSource(MagickImage img, string fullName)
+    private void AddSource(SKBitmap img, string fullName)
     {
         imagesToCleanup.Add(img);
         if (img.Width <= AtlasSize && img.Height <= AtlasSize)
@@ -724,26 +741,33 @@ public class Packer
             ti.TargetY = 0;
             if (GetSpriteType(ti.Source) != SpriteType.Background)
             {
-                img.BorderColor = MagickColors.Transparent;
-                img.BackgroundColor = MagickColors.Transparent;
-                img.Border(1);
-                IMagickGeometry? bbox = img.BoundingBox;
-                if (bbox is not null)
+                // Add border, get bounding box, trim - equivalent to Magick.NET's Border/BoundingBox/Trim
+                using var bordered = AddBorder(img);
+                var bbox = GetBoundingBox(bordered);
+                if (bbox.w > 0 && bbox.h > 0)
                 {
-                    ti.TargetX = bbox.X - 1;
-                    ti.TargetY = bbox.Y - 1;
-                    // yes, .Trim() mutates the image...
+                    ti.TargetX = bbox.x - 1;
+                    ti.TargetY = bbox.y - 1;
+                    // yes, TrimBitmap mutates the image conceptually...
                     // it doesn't really matter though since it isn't written back or anything
-                    img.Trim();
+                    var trimmed = TrimBitmap(bordered);
+                    // Replace img in cleanup list
+                    imagesToCleanup.Remove(img);
+                    img.Dispose();
+                    img = trimmed;
+                    imagesToCleanup.Add(img);
                 }
                 else
                 {
                     // Empty sprites should be 1x1
                     ti.TargetX = 0;
                     ti.TargetY = 0;
-                    img.Crop(1, 1);
+                    var empty = new SKBitmap(1, 1);
+                    imagesToCleanup.Remove(img);
+                    img.Dispose();
+                    img = empty;
+                    imagesToCleanup.Add(img);
                 }
-                img.ResetPage();
             }
             ti.Width = (int)img.Width;
             ti.Height = (int)img.Height;
@@ -876,15 +900,17 @@ public class Packer
         return textures;
     }
 
-    private MagickImage CreateAtlasImage(Atlas _Atlas)
+    private SKBitmap CreateAtlasImage(Atlas _Atlas)
     {
-        MagickImage img = new(MagickColors.Transparent, (uint)_Atlas.Width, (uint)_Atlas.Height);
+        SKBitmap img = new SKBitmap(_Atlas.Width, _Atlas.Height);
+        using var canvas = new SKCanvas(img);
+        canvas.Clear(SKColors.Transparent);
         foreach (Node n in _Atlas.Nodes)
         {
             if (n.Texture is not null)
             {
-                using IMagickImage<byte> resizedSourceImg = TextureWorker.ResizeImage(n.Texture.Image, n.Bounds.Width, n.Bounds.Height);
-                img.Composite(resizedSourceImg, n.Bounds.X, n.Bounds.Y, CompositeOperator.Copy);
+                using SKBitmap resizedSourceImg = TextureWorkerSkia.ResizeImage(n.Texture.Image, n.Bounds.Width, n.Bounds.Height);
+                canvas.DrawBitmap(resizedSourceImg, n.Bounds.X, n.Bounds.Y);
             }
         }
         return img;
@@ -917,7 +943,7 @@ string CheckValidity()
     bool recursiveCheck = ScriptQuestion(@"This script imports all sprites in all subdirectories recursively.
 If an image file is in a folder named ""Backgrounds"", then the image will be imported as a background.
 Otherwise, the image will be imported as a sprite, and allow you to select its origin point and animation speed (if applicable).
-Accepted sprite formats: separate frames starting at 0 or 1 (sprite_N.png), GM-style strip (sprite_stripN.png), animated GIF (sprite.gif), optionally single image (sprite.png).
+Accepted sprite formats: separate frames starting at 0 or 1 (sprite_N.png), GM-style strip (sprite_stripN.png), animated GIF (sprite.gif - first frame only), optionally single image (sprite.png).
 Accepted background formats: single image (bg.png), single-frame GIF (bg.gif).
 Do you want to continue?");
     if (!recursiveCheck)
@@ -1092,148 +1118,54 @@ Pressing ""No"" will cause the program to ignore these images.");
 
 public void OffsetResult()
 {
-    Form form = new Form()
+    // Origin position selection
+    string offsetList = "Select origin position:\n";
+    for (int i = 0; i < offsets.Length; i++)
     {
-        Size = new Size(300, 200),
-        Text = "Select Sprite Parameters",
-        FormBorderStyle = FormBorderStyle.FixedDialog,
-        MaximizeBox = false,
-        MinimizeBox = false,
-        StartPosition = FormStartPosition.CenterScreen,
-        AutoScaleMode = AutoScaleMode.Dpi,
-        AutoScaleDimensions = new Size(96, 96),
-    };
-
-    Func<int, int, Size> logicalSize = (w, h) => form.LogicalToDeviceUnits(new Size(w, h));
-
-    ToolTip toolTip = new ToolTip();
-
-    // for some reason the labels cover eachother on hi-dpi screens,
-    // so this is a bit of a hack for that
-    int labelCover = 3;
-
-    Label specialLabel = new Label();
-    specialLabel.Location = new Point(5, 10);
-    specialLabel.Text = "Special Version:";
-    specialLabel.Size = logicalSize(110, 30 - labelCover);
-    form.Controls.Add(specialLabel);
-
-    CheckBox isSpecialBox = new System.Windows.Forms.CheckBox();
-    isSpecialBox.Enabled = Data.IsGameMaker2();
-    isSpecialBox.Location = new Point(specialLabel.Width + 5, 10);
-    isSpecialBox.Size = logicalSize(20, 20);
-    toolTip.SetToolTip(isSpecialBox, "Is special type? (required for setting animation speed)");
-    form.Controls.Add(isSpecialBox);
-
-    TextBox specialVerBox = new System.Windows.Forms.TextBox();
-    specialVerBox.Enabled = Data.IsGameMaker2();
-    specialVerBox.AcceptsReturn = false;
-    specialVerBox.AcceptsTab = false;
-    specialVerBox.AutoSize = true;
-    specialVerBox.Multiline = false;
-    specialVerBox.Text = "1";
-    specialVerBox.Name = "Special Version";
-    specialVerBox.Location = new Point(specialLabel.Width + 5 + isSpecialBox.Width, 10);
-    specialVerBox.Size = logicalSize(30, 30);
-    specialVerBox.Anchor = AnchorStyles.Right;
-    form.Controls.Add(specialVerBox);
-
-    Label label1 = new Label();
-    label1.Location = new Point(5, specialVerBox.Height + 15);
-    label1.Text = "Animation Speed:";
-    label1.Size = logicalSize(110, 30 - labelCover);
-    form.Controls.Add(label1);
-
-    TextBox textBox = new System.Windows.Forms.TextBox();
-    textBox.Enabled = Data.IsGameMaker2();
-    textBox.AcceptsReturn = false;
-    textBox.AcceptsTab = false;
-    textBox.AutoSize = true;
-    textBox.Multiline = false;
-    textBox.Text = "1";
-    textBox.Name = "Animation Speed";
-    textBox.Location = new Point(label1.Width + 5, specialVerBox.Height + 15);
-    textBox.Size = logicalSize(30, 30);
-    textBox.Anchor = AnchorStyles.Right;
-    form.Controls.Add(textBox);
-
-    Label label2 = new Label();
-    label2.Location = new Point(5, 20 + specialVerBox.Height + textBox.Height);
-    label2.Text = "Playback Type:";
-    label2.Size = logicalSize(110, 30 - labelCover);
-    form.Controls.Add(label2);
-
-    ComboBox comboBox = new ComboBox();
-    comboBox.Enabled = Data.IsGameMaker2();
-    comboBox.Name = "Playback Type";
-    comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-    comboBox.Location = new Point(label2.Width + 5, 20 + specialVerBox.Height + textBox.Height);
-    comboBox.Size = logicalSize(160, 30);
-    comboBox.Anchor = AnchorStyles.Right;
-    foreach (string play in playbacks)
-        comboBox.Items.Add(play);
-    int defaultSelection = comboBox.Items.IndexOf("Frames Per Game Frame");
-    comboBox.SelectedIndex = defaultSelection == -1 ? 0 : defaultSelection;
-    form.Controls.Add(comboBox);
-
-    Label label3 = new Label();
-    label3.Location = new Point(5, 25 + specialVerBox.Height + textBox.Height + comboBox.Height);
-    label3.Text = "Origin Position:";
-    label3.Size = logicalSize(110, 30 - labelCover);
-    form.Controls.Add(label3);
-
-    ComboBox comboBox2 = new ComboBox();
-    comboBox2.Name = "Origin Position";
-    comboBox2.DropDownStyle = ComboBoxStyle.DropDownList;
-    comboBox2.Location = new Point(label2.Width + 5, 25 + specialVerBox.Height + textBox.Height + comboBox.Height);
-    comboBox2.Size = logicalSize(160, 30);
-    comboBox2.Anchor = AnchorStyles.Right;
-    foreach (string off in offsets)
-        comboBox2.Items.Add(off);
-    int defaultSelection2 = comboBox2.Items.IndexOf("Top Left");
-    comboBox2.SelectedIndex = defaultSelection2 == -1 ? 0 : defaultSelection2;
-    form.Controls.Add(comboBox2);
-
-    int bottomY = form.Size.Height - 30;
-
-    Button okBtn = new Button();
-    okBtn.Text = "&Confirm";
-    okBtn.Size = logicalSize(90, 30);
-    okBtn.Location = new Point(5, 35 + specialVerBox.Height + textBox.Height + comboBox.Height + comboBox2.Height);
-    okBtn.Anchor = AnchorStyles.Left;
-    form.Controls.Add(okBtn);
-
-    EventHandler updateFramesActive = (o, e) =>
+        offsetList += $"{i + 1}. {offsets[i]}\n";
+    }
+    string offsetInput = SimpleTextInput("Origin Position", offsetList, "1", false);
+    if (!int.TryParse(offsetInput, out int offsetIndex) || offsetIndex < 1 || offsetIndex > offsets.Length)
     {
-        specialVerBox.Enabled = isSpecialBox.Checked;
-        textBox.Enabled = isSpecialBox.Checked;
-    };
+        offsetIndex = 1; // Default to Top Left
+    }
+    offresult = offsets[offsetIndex - 1];
 
-    isSpecialBox.CheckedChanged += updateFramesActive;
-    updateFramesActive(null, null);
-
-    okBtn.Click += (o, e) =>
+    // Special type
+    if (Data.IsGameMaker2())
     {
-        if (float.TryParse(textBox.Text, out float j))
+        string specialInput = SimpleTextInput("Special Type", "Is special type? (required for setting animation speed)\nEnter version number:", "1", false);
+        if (!uint.TryParse(specialInput, out specialVer))
         {
-            if (uint.TryParse(specialVerBox.Text, out uint k))
-            {
-                isSpecial = isSpecialBox.Checked;
-                specialVer = k;
-                animSpd = j;
-                offresult = offsets[comboBox2.SelectedIndex];
-                playback = comboBox.SelectedIndex;
-                form.Close();
-            }
-            else
-            {
-                MessageBox.Show("Please use a number in the special version.");
-            }
+            specialVer = 1;
         }
-        else
+        isSpecial = true;
+
+        // Animation speed
+        string speedInput = SimpleTextInput("Animation Speed", "Enter animation speed:", "1", false);
+        if (!float.TryParse(speedInput, out animSpd))
         {
-            MessageBox.Show("Please use a number in the animation speed.");
+            animSpd = 1;
         }
-    };
-    form.ShowDialog();
+
+        // Playback type
+        string playbackList = "Select playback type:\n";
+        for (int i = 0; i < playbacks.Length; i++)
+        {
+            playbackList += $"{i + 1}. {playbacks[i]}\n";
+        }
+        string playbackInput = SimpleTextInput("Playback Type", playbackList, "2", false);
+        if (!int.TryParse(playbackInput, out int playbackIndex) || playbackIndex < 1 || playbackIndex > playbacks.Length)
+        {
+            playbackIndex = 2; // Default to Frames Per Game Frame
+        }
+        playback = playbackIndex - 1;
+    }
+    else
+    {
+        isSpecial = false;
+        specialVer = 1;
+        animSpd = 1;
+        playback = 0;
+    }
 }

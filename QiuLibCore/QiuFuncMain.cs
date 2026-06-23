@@ -88,7 +88,7 @@ public partial class QiuFuncMain : IScriptInterface
     /// <summary>
     /// The ScriptOptions, only used for <see cref="CSharpScript"/>, aka running C# code.
     /// </summary>
-    private ScriptOptions CliScriptOptions { get; }
+    private ScriptOptions CliScriptOptions { get; set; } = ScriptOptions.Default;
 
     /// <summary>
     /// Determines if actions should show a "this is finished" text. Gets set by <see cref="SetFinishedMessage"/>.
@@ -118,28 +118,30 @@ public partial class QiuFuncMain : IScriptInterface
         this.Data = ReadDataFile(datafile, WarningHandler, this.Verbose ? MessageHandler : DummyHandler);
 
         FinishedMessageEnabled = true;
-        try
+        CliScriptOptions = CliScriptOptions.WithAllowUnsafe(true).WithEmitDebugInformation(true);
+        CliScriptOptions = CliScriptOptions.AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
+            "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
+            "UndertaleModLib.Util", "System", "System.IO", "System.Collections.Generic",
+            "System.Text.RegularExpressions");
+        foreach (var asm in new System.Reflection.Assembly[]
         {
-            var cliscript = ScriptOptions.Default;
-            cliscript = cliscript.WithAllowUnsafe(true);
-            cliscript = cliscript.WithEmitDebugInformation(true);
-            //var t=new UndertaleModLib.ToolInfo();
-            cliscript = cliscript.AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
-                "UndertaleModLib.Util", "System", "System.IO", "System.Collections.Generic",
-                "System.Text.RegularExpressions");
-            cliscript = cliscript.AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
-                GetType().GetTypeInfo().Assembly,
-                typeof(JsonConvert).GetTypeInfo().Assembly,
-                typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                typeof(TextureWorker).GetTypeInfo().Assembly,
-                typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
-                typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
-            this.CliScriptOptions = cliscript;
-        }
-        catch (Exception ee)
+            typeof(UndertaleObject).GetTypeInfo().Assembly,
+            GetType().GetTypeInfo().Assembly,
+            typeof(JsonConvert).GetTypeInfo().Assembly,
+            typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
+            typeof(TextureWorker).GetTypeInfo().Assembly,
+            typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
+            typeof(Underanalyzer.Decompiler.DecompileContext).Assembly
+        })
         {
-            Debug.WriteLine(ee.Message);
+            try
+            {
+                CliScriptOptions = CliScriptOptions.AddReferences(asm);
+            }
+            catch (Exception ee)
+            {
+                Debug.WriteLine($"Failed to add assembly reference '{asm.FullName}': {ee.Message}");
+            }
         }
     }
 
@@ -162,28 +164,30 @@ public partial class QiuFuncMain : IScriptInterface
         this.Data = data;
 
         FinishedMessageEnabled = true;
-        try
+        CliScriptOptions = CliScriptOptions.WithAllowUnsafe(true).WithEmitDebugInformation(true);
+        CliScriptOptions = CliScriptOptions.AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
+            "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
+            "UndertaleModLib.Util", "System", "System.IO", "System.Collections.Generic",
+            "System.Text.RegularExpressions");
+        foreach (var asm in new System.Reflection.Assembly[]
         {
-            var cliscript = ScriptOptions.Default;
-            cliscript = cliscript.WithAllowUnsafe(true);
-            cliscript = cliscript.WithEmitDebugInformation(true);
-            //var t=new UndertaleModLib.ToolInfo();
-            cliscript = cliscript.AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
-                "UndertaleModLib.Util", "System", "System.IO", "System.Collections.Generic",
-                "System.Text.RegularExpressions");
-            cliscript = cliscript.AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
-                GetType().GetTypeInfo().Assembly,
-                typeof(JsonConvert).GetTypeInfo().Assembly,
-                typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                typeof(TextureWorker).GetTypeInfo().Assembly,
-                typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
-                typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
-            this.CliScriptOptions = cliscript;
-        }
-        catch (Exception ee)
+            typeof(UndertaleObject).GetTypeInfo().Assembly,
+            GetType().GetTypeInfo().Assembly,
+            typeof(JsonConvert).GetTypeInfo().Assembly,
+            typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
+            typeof(TextureWorker).GetTypeInfo().Assembly,
+            typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
+            typeof(Underanalyzer.Decompiler.DecompileContext).Assembly
+        })
         {
-            Debug.WriteLine(ee.Message);
+            try
+            {
+                CliScriptOptions = CliScriptOptions.AddReferences(asm);
+            }
+            catch (Exception ee)
+            {
+                Debug.WriteLine($"Failed to add assembly reference '{asm.FullName}': {ee.Message}");
+            }
         }
     }
 

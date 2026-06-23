@@ -2,27 +2,27 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:strings="using:UndertaleModToolAvalonia.Assets"
              xmlns:l="clr-namespace:UndertaleModToolAvalonia"
              xmlns:undertalem="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
+             xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.UndertaleVariableView"
-             x:DataType="l:UndertaleVariableViewModel" xmlns:strings1="clr-namespace:UndertaleModToolAvalonia.Assets" >
+             x:DataType="l:UndertaleVariableViewModel" >
     <UserControl.Resources>
         <l:EnumTypeToValuesConverter x:Key="EnumTypeToValuesConverter" />
     </UserControl.Resources>
     <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*" Classes="PaddedProperties">
-        <Label Content="{x:Static strings:Strings.Name}"></Label>
+        <Label Content="{loc:Loc Name}"></Label>
         <l:UndertaleStringReferenceView Reference="{Binding Variable.Name}" />
 
-        <Label Content="{x:Static strings1:Strings.Instance_type}"></Label>
+        <Label Content="{loc:Loc Instance_type}"></Label>
         <ComboBox ItemsSource="{Binding Source={x:Type undertalem:UndertaleInstruction+InstanceType}, Converter={StaticResource EnumTypeToValuesConverter}}"
                   SelectedItem="{Binding Variable.InstanceType}" />
 
-        <Label Content="{x:Static strings1:Strings.VarID}"></Label>
+        <Label Content="{loc:Loc VarID}"></Label>
         <TextBox Text="{Binding Variable.VarID}" />
 
-        <Label Content="{x:Static strings1:Strings.Name_string_ID}"></Label>
+        <Label Content="{loc:Loc Name_string_ID}"></Label>
         <TextBox Text="{Binding Variable.NameStringID}" />
     </Grid>
 </UserControl>

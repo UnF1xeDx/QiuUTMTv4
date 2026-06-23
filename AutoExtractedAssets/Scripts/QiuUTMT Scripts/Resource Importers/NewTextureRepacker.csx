@@ -29,7 +29,7 @@ using UndertaleModLib.Scripting;
 using UndertaleModLib.Util;
 using UndertaleModLib.Models;
 using System.Numerics;
-using ImageMagick;
+using SkiaSharp;
 
 public class Rect
 {
@@ -213,7 +213,7 @@ void ResetProgress(string text)
     UpdateProgress(0);
 }
 
-TPageItem dumpTexturePageItem(UndertaleTexturePageItem pageItem, TextureWorker worker, string pageItemFile, bool reuse)
+TPageItem dumpTexturePageItem(UndertaleTexturePageItem pageItem, TextureWorkerSkia worker, string pageItemFile, bool reuse)
 {
     TPageItem page = new TPageItem();
     page.Filename = pageItemFile;
@@ -237,7 +237,7 @@ TPageItem dumpTexturePageItem(UndertaleTexturePageItem pageItem, TextureWorker w
 
 async Task<List<TPageItem>> dumpTexturePageItems(string dir, bool reuse)
 {
-    using var worker = new TextureWorker();
+    using var worker = new TextureWorkerSkia();
 
     var tpageitems = await Task.Run(() => Data.TexturePageItems
         .AsParallel()
@@ -440,7 +440,11 @@ await Task.Run(() =>
                 Data.EmbeddedTextures.Add(tex);
             });
             
-            using MagickImage newAtlasImage = new(MagickColors.Transparent, (uint)atlas.Width, (uint)atlas.Height);
+            using var newAtlasImage = new SKBitmap(atlas.Width, atlas.Height);
+            using (var clearCanvas = new SKCanvas(newAtlasImage))
+            {
+                clearCanvas.Clear(SKColors.Transparent);
+            }
 
             tex.Scaled = group.First().Scaled; // Make sure the original pane "Scaled" value is mantained.
 
@@ -453,9 +457,10 @@ await Task.Run(() =>
             {
                 f.WriteLine($"tex: {texPageItems.IndexOf(item)}: {item.NewRect.X}, {item.NewRect.Y}, {item.NewRect.Width}, {item.NewRect.Height}");
 
-                using (MagickImage source = TextureWorker.ReadBGRAImageFromFile(item.Filename))
+                using (SKBitmap source = TextureWorkerSkia.ReadBGRAImageFromFile(item.Filename))
                 {
-                    newAtlasImage.Composite(source, item.NewRect.X, item.NewRect.Y, CompositeOperator.Copy);
+                    using var canvas = new SKCanvas(newAtlasImage);
+                    canvas.DrawBitmap(source, item.NewRect.X, item.NewRect.Y);
                 }
 
                 item.Item.TexturePage = tex;
@@ -468,10 +473,10 @@ await Task.Run(() =>
 
             // Save atlas into a file
             string atlasFile = Paths.JoinVerifyWithinDirectory(packagerDirectory, $"atlas_{atlasName}.png");
-            TextureWorker.SaveImageToFile(newAtlasImage, atlasFile);
+            TextureWorkerSkia.SaveImageToFile(newAtlasImage, atlasFile);
 
             // Assign new texture image
-            tex.TextureData.Image = GMImage.FromMagickImage(newAtlasImage).ConvertToPng(); // TODO: generate other formats
+            tex.TextureData.Image = GMImage.FromSkiaImage(SKImage.FromBitmap(newAtlasImage)); // TODO: generate other formats
         }
         else
         {
@@ -494,19 +499,24 @@ await Task.Run(() =>
                     int potw = NearestPowerOf2((uint)item.OriginalRect.Width),
                         poth = NearestPowerOf2((uint)item.OriginalRect.Height);
 
-                    using MagickImage newAtlasImage = new(MagickColors.Transparent, (uint)potw, (uint)poth);
+                    using var newAtlasImage = new SKBitmap(potw, poth);
+                    using (var clearCanvas = new SKCanvas(newAtlasImage))
+                    {
+                        clearCanvas.Clear(SKColors.Transparent);
+                    }
 
                     // Load texture, composite onto top left of new atlas
-                    using (MagickImage source = TextureWorker.ReadBGRAImageFromFile(item.Filename))
+                    using (SKBitmap source = TextureWorkerSkia.ReadBGRAImageFromFile(item.Filename))
                     {
-                        newAtlasImage.Composite(source, 0, 0, CompositeOperator.Copy);
+                        using var canvas = new SKCanvas(newAtlasImage);
+                        canvas.DrawBitmap(source, 0, 0);
                     }
 
                     itemFile = Paths.JoinVerifyWithinDirectory(packagerDirectory, $"pot_{texPageItems.IndexOf(item)}.png");
-                    TextureWorker.SaveImageToFile(newAtlasImage, itemFile);
+                    TextureWorkerSkia.SaveImageToFile(newAtlasImage, itemFile);
 
                     // Assign new texture image
-                    tex.TextureData.Image = GMImage.FromMagickImage(newAtlasImage).ConvertToPng(); // TODO: generate other formats
+                    tex.TextureData.Image = GMImage.FromSkiaImage(SKImage.FromBitmap(newAtlasImage)); // TODO: generate other formats
                 }
                 else
                 {

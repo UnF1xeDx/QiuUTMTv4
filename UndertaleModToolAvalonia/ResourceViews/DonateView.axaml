@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,10 +6,10 @@
              xmlns:undertalem="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.DonateView"
-             x:DataType="l:DonateView" xmlns:strings="clr-namespace:UndertaleModToolAvalonia.Assets" >
+             x:DataType="l:DonateView" xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization" >
     <ScrollViewer>
         <StackPanel>
-            <TextBlock FontWeight="Bold" Text="{x:Static strings:Strings.Thank_you_for_donation}" />
+            <TextBlock FontWeight="Bold" Text="{loc:Loc Thank_you_for_donation}" />
             <Separator />
             <Image Source="avares://UndertaleModToolAvalonia/Assets/genouka_mm_reward_qrcode.png" MaxHeight="300" />
         </StackPanel>

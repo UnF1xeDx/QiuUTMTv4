@@ -13,7 +13,7 @@ using UndertaleModLib.Models;
 
 namespace UndertaleModToolAvalonia;
 
-public partial class ImportGraphicsDialog : Window
+public partial class ImportGraphicsDialogView : UserControl, IOverlayDialog
 {
     private readonly UndertaleData _data = null!;
     private ObservableCollection<ImportImageEntry> _entries = new();
@@ -28,12 +28,14 @@ public partial class ImportGraphicsDialog : Window
     public List<ImportImageEntry> SelectedEntries { get; private set; } = new();
     public GraphicsImportSettings? Settings { get; private set; }
 
-    public ImportGraphicsDialog()
+    public event Action? CloseRequested;
+
+    public ImportGraphicsDialogView()
     {
         InitializeComponent();
     }
 
-    public ImportGraphicsDialog(UndertaleData data) : this()
+    public ImportGraphicsDialogView(UndertaleData data) : this()
     {
         _data = data ?? throw new ArgumentNullException(nameof(data));
         EntriesDataGrid.ItemsSource = _entries;
@@ -118,14 +120,11 @@ public partial class ImportGraphicsDialog : Window
         Match stripMatch = Regex.Match(stripped, @"(.*)_strip(\d+)");
         if (spriteType == SpriteType.Sprite && stripMatch.Success)
         {
-            // Strip sprites are expanded into individual frames by the packer,
-            // so we just note the base sprite name and frame 0
             spriteName = stripMatch.Groups[1].Value;
             frameIndex = 0;
         }
         else
         {
-            // Try to parse as spriteName_frameIndex
             int lastUnderscore = stripped.LastIndexOf('_');
             if (lastUnderscore >= 0 && int.TryParse(stripped.Substring(lastUnderscore + 1), out int parsedFrame))
             {
@@ -139,14 +138,12 @@ public partial class ImportGraphicsDialog : Window
             }
         }
 
-        // For backgrounds, frame is always 0
         if (spriteType == SpriteType.Background)
         {
             spriteName = stripped;
             frameIndex = 0;
         }
 
-        // Read image dimensions
         int width = 0, height = 0;
         try
         {
@@ -154,7 +151,6 @@ public partial class ImportGraphicsDialog : Window
             width = (int)img.Width;
             height = (int)img.Height;
 
-            // For strip sprites, divide width by frame count
             if (spriteType == SpriteType.Sprite && stripMatch.Success)
             {
                 if (int.TryParse(stripMatch.Groups[2].Value, out int frameCount) && frameCount > 0)
@@ -166,7 +162,6 @@ public partial class ImportGraphicsDialog : Window
             return null;
         }
 
-        // Determine if the sprite/background exists and what modes are available
         bool spriteExists = false;
         bool canReplaceInPlace = false;
         int? targetWidth = null, targetHeight = null;
@@ -193,7 +188,6 @@ public partial class ImportGraphicsDialog : Window
                     else
                         statusText = "Size mismatch";
 
-                    // Find texture page index
                     for (int i = 0; i < _data.EmbeddedTextures.Count; i++)
                     {
                         if (_data.EmbeddedTextures[i] == bg.Texture.TexturePage)
@@ -224,7 +218,6 @@ public partial class ImportGraphicsDialog : Window
                     else
                         statusText = "Size mismatch";
 
-                    // Find texture page index
                     for (int i = 0; i < _data.EmbeddedTextures.Count; i++)
                     {
                         if (_data.EmbeddedTextures[i] == item.TexturePage)
@@ -241,7 +234,6 @@ public partial class ImportGraphicsDialog : Window
             }
         }
 
-        // Determine default import mode
         ImportMode defaultMode;
         if (canReplaceInPlace)
             defaultMode = GetGlobalImportMode();
@@ -274,7 +266,6 @@ public partial class ImportGraphicsDialog : Window
             PlaybackType = PlaybackTypeCombo.SelectedIndex
         };
 
-        // Estimate texture page index for new entries
         if (entry.ImportMode == ImportMode.NewTexturePages)
         {
             entry.EstimatedTexturePageIndex = _data.EmbeddedTextures.Count;
@@ -350,17 +341,19 @@ public partial class ImportGraphicsDialog : Window
             TexturePageSize = GetTexturePageSize()
         };
 
-        Close(true);
+        CloseRequested?.Invoke();
     }
 
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
-        Close(false);
+        CloseRequested?.Invoke();
     }
 
     private async Task ShowMessage(string message)
     {
-        var msgWindow = new MessageWindow(message, "Import Graphics", ok: true);
-        await msgWindow.ShowDialog(this);
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(message, "Import Graphics", ok: true);
+        }
     }
 }

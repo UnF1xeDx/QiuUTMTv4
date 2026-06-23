@@ -1,9 +1,10 @@
-﻿using System.Text;
+using System.Text;
 using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -16,7 +17,7 @@ if (texFolder is null)
 SetProgressBar(null, "Sprite masks", 0, Data.Sprites.Count);
 StartProgressBarUpdater();
 
-TextureWorker worker = null;
+TextureWorkerSkia worker = null;
 using (worker = new())
 {
     await DumpSprites();
@@ -42,7 +43,7 @@ void DumpSprite(UndertaleSprite sprite)
         if (sprite.CollisionMasks[i]?.Data is not null)
         {
             (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(Data);
-            TextureWorker.ExportCollisionMaskPNG(sprite.CollisionMasks[i], Paths.JoinVerifyWithinDirectory(texFolder, $"{sprite.Name.Content}_{i}.png"), maskWidth, maskHeight);
+            TextureWorkerSkia.ExportCollisionMaskPNG(sprite.CollisionMasks[i], Paths.JoinVerifyWithinDirectory(texFolder, $"{sprite.Name.Content}_{i}.png"), maskWidth, maskHeight);
         }
     }
 

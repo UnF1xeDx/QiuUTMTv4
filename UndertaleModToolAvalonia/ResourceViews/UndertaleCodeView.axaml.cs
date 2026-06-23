@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -13,7 +13,8 @@ using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Highlighting;
 using AvaloniaEdit.Highlighting.Xshd;
-using AvaloniaEdit.Search;
+using UndertaleModToolAvalonia.Editors;
+using UndertaleModToolAvalonia.NativeViews;
 
 namespace UndertaleModToolAvalonia;
 
@@ -30,39 +31,67 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
     public (int, int) LastCaretOffsets;
 
+    /// <summary>
+    /// Whether SoraEditor is the active editor (based on user settings and platform).
+    /// </summary>
+    internal bool _useSoraEditor;
+
     public UndertaleCodeView()
     {
         InitializeComponent();
-        
+
         DataContextChanged += (_, __) =>
         {
             if (DataContext is UndertaleCodeViewModel vm)
             {
                 vm.View = this;
-                if (vm.MainVM.Settings!.UseSoraEditor&&OperatingSystem.IsAndroid())
-                {
-                    ClassicGmlTab.IsVisible = false;
-                    ClassicAsmTab.IsVisible = false;
-                    SoraEditorGmlTab.IsSelected = true;
-                }
-                else
-                {
-                    SoraEditorGmlTab.IsVisible = false;
-                    SoraEditorAsmTab.IsVisible = false;
-                }
-                if (vm.MainVM.Settings!.EnableSyntaxHighlighting)
-                {
-                    UndertaleCodeView.GMLHighlightingDefinition ??= LoadHighlightingDefinition("GML");
-                    GMLTextEditor.SyntaxHighlighting = UndertaleCodeView.GMLHighlightingDefinition;
 
-                    UndertaleCodeView.ASMHighlightingDefinition ??= LoadHighlightingDefinition("ASM");
-                    ASMTextEditor.SyntaxHighlighting = UndertaleCodeView.ASMHighlightingDefinition;
+                // Determine which editor to use based on settings and platform
+                _useSoraEditor = vm.MainVM.Settings!.UseSoraEditor && OperatingSystem.IsAndroid();
+
+                // Show only the appropriate TabControl based on editor choice
+                bool hasParentEntry = vm.Code.ParentEntry is not null;
+                if (_useSoraEditor)
+                {
+                    SoraEditorTabControl.IsVisible = !hasParentEntry;
+                    ClassicTabControl.IsVisible = false;
                 }
                 else
                 {
-                    GMLTextEditor.SyntaxHighlighting = null;
-                    ASMTextEditor.SyntaxHighlighting = null;
+                    ClassicTabControl.IsVisible = !hasParentEntry;
+                    SoraEditorTabControl.IsVisible = false;
                 }
+
+                if (!_useSoraEditor)
+                {
+                    if (vm.MainVM.Settings!.EnableSyntaxHighlighting)
+                    {
+                        UndertaleCodeView.GMLHighlightingDefinition ??= LoadHighlightingDefinition("GML");
+                        GMLTextEditor.SyntaxHighlighting = UndertaleCodeView.GMLHighlightingDefinition;
+
+                        UndertaleCodeView.ASMHighlightingDefinition ??= LoadHighlightingDefinition("ASM");
+                        ASMTextEditor.SyntaxHighlighting = UndertaleCodeView.ASMHighlightingDefinition;
+                    }
+                    else
+                    {
+                        GMLTextEditor.SyntaxHighlighting = null;
+                        ASMTextEditor.SyntaxHighlighting = null;
+                    }
+
+                    // Apply code editor settings (only for AvaloniaEdit)
+                    ApplyCodeEditorSettings(vm.MainVM.Settings);
+                }
+
+                // Listen for settings changes
+                vm.MainVM.Settings.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName is nameof(SettingsFile.CodeEditorWordWrap)
+                        or nameof(SettingsFile.CodeEditorShowWhitespace))
+                    {
+                        if (!_useSoraEditor)
+                            ApplyCodeEditorSettings(vm.MainVM.Settings);
+                    }
+                };
 
                 if (this.IsAttachedToVisualTree())
                 {
@@ -83,15 +112,19 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
                         ProcessLastGoToLocation();
                     }
                 };
+
+                // Listen for overlay active state to hide/show SoraEditor native views
+                // (native views render on top of Avalonia controls on Android)
+                vm.MainVM.PropertyChanged += OnMainViewModelPropertyChanged;
             }
         };
 
         InitializeTextEditor(GMLTextEditor);
         InitializeTextEditor(ASMTextEditor);
 
-        // Install search panels
-        SearchPanel.Install(GMLTextEditor);
-        SearchPanel.Install(ASMTextEditor);
+        // Initialize search/replace panels
+        GMLSearchPanel.Initialize(GMLTextEditor.TextArea);
+        ASMSearchPanel.Initialize(ASMTextEditor.TextArea);
 
         // Add modified lines background renderers
         GMLTextEditor.TextArea.TextView.BackgroundRenderers.Add(_gmlModifiedRenderer);
@@ -120,6 +153,23 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
         ShowWhitespaceCheck.IsCheckedChanged += ShowWhitespaceCheck_Changed;
     }
 
+    private void OnMainViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsOverlayActive))
+        {
+            // When overlay is active, hide SoraEditor native views so they don't render on top of the overlay
+            if (DataContext is UndertaleCodeViewModel vm)
+            {
+                bool overlayActive = vm.MainVM.IsOverlayActive;
+                if (_useSoraEditor)
+                {
+                    // Hide/show the SoraEditor TabControl to remove native views from rendering
+                    SoraEditorTabControl.IsVisible = !overlayActive && vm.Code.ParentEntry is null;
+                }
+            }
+        }
+    }
+
     static IHighlightingDefinition LoadHighlightingDefinition(string name)
     {
         using (XmlReader reader = XmlReader.Create(AssetLoader.Open(new Uri($"avares://{Assembly.GetExecutingAssembly().FullName}/Assets/Syntax{name}.xshd"))))
@@ -133,6 +183,22 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
         textEditor.Options.ConvertTabsToSpaces = true;
         textEditor.Options.HighlightCurrentLine = true;
         textEditor.FontSize = _zoomFontSize;
+    }
+
+    private void ApplyCodeEditorSettings(SettingsFile settings)
+    {
+        bool wordWrap = settings.CodeEditorWordWrap;
+        bool showWhitespace = settings.CodeEditorShowWhitespace;
+
+        GMLTextEditor.WordWrap = wordWrap;
+        ASMTextEditor.WordWrap = wordWrap;
+        GMLTextEditor.Options.ShowSpaces = showWhitespace;
+        GMLTextEditor.Options.ShowTabs = showWhitespace;
+        ASMTextEditor.Options.ShowSpaces = showWhitespace;
+        ASMTextEditor.Options.ShowTabs = showWhitespace;
+
+        WordWrapCheck.IsChecked = wordWrap;
+        ShowWhitespaceCheck.IsChecked = showWhitespace;
     }
 
     private void Editor_PointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -158,15 +224,34 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
         }
 
         LastZoomFontSize = _zoomFontSize;
-        GMLTextEditor.FontSize = _zoomFontSize;
-        ASMTextEditor.FontSize = _zoomFontSize;
+        if (!_useSoraEditor)
+        {
+            GMLTextEditor.FontSize = _zoomFontSize;
+            ASMTextEditor.FontSize = _zoomFontSize;
+        }
     }
 
     private void Editor_KeyDown(object? sender, KeyEventArgs e)
     {
-        // Ctrl+F and Ctrl+H are handled by SearchPanel automatically when installed,
-        // but we handle them here explicitly to ensure they work on both editors
-        // regardless of which one has focus.
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            if (e.Key == Key.F)
+            {
+                e.Handled = true;
+                if (sender == GMLTextEditor)
+                    GMLSearchPanel.Open(replaceMode: false);
+                else
+                    ASMSearchPanel.Open(replaceMode: false);
+            }
+            else if (e.Key == Key.H)
+            {
+                e.Handled = true;
+                if (sender == GMLTextEditor)
+                    GMLSearchPanel.Open(replaceMode: true);
+                else
+                    ASMSearchPanel.Open(replaceMode: true);
+            }
+        }
     }
 
     private void WordWrapCheck_Changed(object? sender, EventArgs e)
@@ -192,8 +277,11 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
     /// </summary>
     public void SetOriginalTextForModifiedTracking()
     {
-        _gmlModifiedRenderer.SetOriginalText(GMLTextEditor.Text, GMLTextEditor.Document);
-        _asmModifiedRenderer.SetOriginalText(ASMTextEditor.Text, ASMTextEditor.Document);
+        if (!_useSoraEditor)
+        {
+            _gmlModifiedRenderer.SetOriginalText(GMLTextEditor.Text, GMLTextEditor.Document);
+            _asmModifiedRenderer.SetOriginalText(ASMTextEditor.Text, ASMTextEditor.Document);
+        }
     }
 
     /// <summary>
@@ -201,8 +289,11 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
     /// </summary>
     public void ClearModifiedLines()
     {
-        _gmlModifiedRenderer.ClearModifiedLines();
-        _asmModifiedRenderer.ClearModifiedLines();
+        if (!_useSoraEditor)
+        {
+            _gmlModifiedRenderer.ClearModifiedLines();
+            _asmModifiedRenderer.ClearModifiedLines();
+        }
     }
 
     public void ProcessLastGoToLocation()
@@ -222,6 +313,14 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
         if (DataContext is UndertaleCodeViewModel vm)
         {
             vm.SelectedTab = location.tab;
+
+            if (_useSoraEditor)
+            {
+                // SoraEditor doesn't support programmatic scroll/line navigation via Avalonia,
+                // but we can at least switch to the correct tab
+                return;
+            }
+
             AvaloniaEdit.TextEditor textEditor = (location.tab == UndertaleCodeViewModel.Tab.GML) ? GMLTextEditor : ASMTextEditor;
 
             textEditor.TextArea.Caret.Column = 0;
@@ -243,6 +342,12 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
     private void GMLTextEditor_LostFocus(object? sender, RoutedEventArgs e)
     {
+        // When using SoraEditor (native Android control), clicking the editor causes Avalonia LostFocus
+        // which triggers auto-compile, disabling the UI and stealing focus from the native editor.
+        // Skip auto-compile on LostFocus for SoraEditor since focus semantics differ.
+        if (_useSoraEditor)
+            return;
+
         if (DataContext is UndertaleCodeViewModel vm && vm.MainVM.Settings!.AutomaticallyCompileAndDecompileCodeOnLostFocus)
         {
             vm.CompileAndDecompileGML(onlyIfOutdated: true);
@@ -251,6 +356,9 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
     private void ASMTextEditor_LostFocus(object? sender, RoutedEventArgs e)
     {
+        if (_useSoraEditor)
+            return;
+
         if (DataContext is UndertaleCodeViewModel vm && vm.MainVM.Settings!.AutomaticallyCompileAndDecompileCodeOnLostFocus)
         {
             vm.CompileAndDecompileASM(onlyIfOutdated: true);
@@ -280,18 +388,45 @@ public interface IUndertaleCodeView
 
     public void SaveCaretOffsets()
     {
+        if (View._useSoraEditor)
+        {
+            // SoraEditor doesn't support caret offset via AvaloniaEdit API
+            return;
+        }
         View.LastCaretOffsets = (View.GMLTextEditor.CaretOffset, View.ASMTextEditor.CaretOffset);
     }
 
     public void RestoreCaretOffsets()
     {
+        if (View._useSoraEditor)
+        {
+            return;
+        }
         View.GMLTextEditor.CaretOffset = Math.Clamp(View.LastCaretOffsets.Item1, 0, View.GMLTextEditor.Text.Length);
         View.ASMTextEditor.CaretOffset = Math.Clamp(View.LastCaretOffsets.Item2, 0, View.ASMTextEditor.Text.Length);
     }
 
     public int GMLCaretOffset
     {
-        get { return View.GMLTextEditor.CaretOffset; }
-        set { View.GMLTextEditor.CaretOffset = value; }
+        get
+        {
+            if (View._useSoraEditor) return 0;
+            return View.GMLTextEditor.CaretOffset;
+        }
+        set
+        {
+            if (View._useSoraEditor) return;
+            View.GMLTextEditor.CaretOffset = value;
+        }
+    }
+
+    public void SetOriginalTextForModifiedTracking()
+    {
+        View.SetOriginalTextForModifiedTracking();
+    }
+
+    public void ClearModifiedLines()
+    {
+        View.ClearModifiedLines();
     }
 }

@@ -1,5 +1,6 @@
-﻿using Android.App;
+using Android.App;
 using Android.Graphics;
+using IO.Github.Rosemoe.Sora.Event;
 using IO.Github.Rosemoe.Sora.Langs.Textmate;
 using IO.Github.Rosemoe.Sora.Langs.Textmate.Registry;
 using IO.Github.Rosemoe.Sora.Langs.Textmate.Registry.Model;
@@ -33,7 +34,7 @@ public class SoraEditorAndroid : ISoraEditorAndroid
                 new LocalFileProvider(AppContext.BaseDirectory)
             );
             var themeRegistry = ThemeRegistry.Instance;
-            var themeName = "solarized_dark"; // 主题名称
+            var themeName = "solarized_dark";
             var themeAssetsPath = "textmate/" + themeName + ".json";
             var themeModel = new ThemeModel(
                 IThemeSource.FromInputStream(
@@ -41,35 +42,43 @@ public class SoraEditorAndroid : ISoraEditorAndroid
                 ),
                 themeName
             );
-// 如果主题是适用于暗色模式的，请额外添加以下内容
-// model.setDark(true);
-            themeModel.Dark=true;
+            themeModel.Dark = true;
             themeRegistry.LoadTheme(themeModel);
             themeRegistry.SetTheme(themeName);
-            GrammarRegistry.Instance.LoadGrammars("textmate/language.json");
+            GrammarRegistry.Instance.LoadGrammars("textmate/language.json");    
         }
     }
     public IPlatformHandle CreateControl(IPlatformHandle parent, Func<IPlatformHandle> createDefault)
     {
         DoMeOnlyOnce();
-        var parentContext = (parent as AndroidViewControlHandle)?.View.Context
+        var parentContext = (parent as AndroidViewControlHandle)?.View.Context  
                             ?? global::Android.App.Application.Context;
 
         var codeEditor = new CodeEditor(parentContext);
         codeEditor.TypefaceText = Typeface.Monospace;
         codeEditor.NonPrintablePaintingFlags = (
             CodeEditor.FlagDrawWhitespaceLeading | CodeEditor.FlagDrawLineSeparator |
-            CodeEditor.FlagDrawWhitespaceInSelection); // Show Non-Printable Characters
+            CodeEditor.FlagDrawWhitespaceInSelection);
         codeEditor.ColorScheme = TextMateColorScheme.Create(ThemeRegistry.Instance);
-        var languageScopeName = "source.gml"; // 您目标语言的作用域名称
+        var languageScopeName = "source.gml";
         var language = TextMateLanguage.Create(
-            languageScopeName, true /* true表示启用自动补全 */
+            languageScopeName, true
         );
         codeEditor.EditorLanguage = language;
+
+        // Ensure the editor is focusable so it can receive touch events and show the
+        // text actions popup (copy/cut/paste/select all) on long press
+        codeEditor.Focusable = true;
+        codeEditor.FocusableInTouchMode = true;
+
+        // Ensure the editor is important for autofill so the system properly manages
+        // the input connection and text selection actions
+        codeEditor.ImportantForAutofill = (global::Android.Views.ImportantForAutofill)2;
+
         return new AndroidViewControlHandle(codeEditor);
     }
 
-    public void SetText(IPlatformHandle androidViewControlHandle, string text)
+    public void SetText(IPlatformHandle androidViewControlHandle, string text)  
     {
         var codeEditor = (androidViewControlHandle as AndroidViewControlHandle).View as CodeEditor;
         codeEditor.SetText(text);
@@ -79,5 +88,74 @@ public class SoraEditorAndroid : ISoraEditorAndroid
     {
         var codeEditor = (androidViewControlHandle as AndroidViewControlHandle).View as CodeEditor;
         return codeEditor.Text.ToString();
+    }
+
+    public void SetOnTextChanged(IPlatformHandle androidViewControlHandle, Action<string> callback)
+    {
+        var codeEditor = (androidViewControlHandle as AndroidViewControlHandle).View as CodeEditor;
+        var eventClass = Java.Lang.Class.FromType(typeof(ContentChangeEvent));  
+        codeEditor.SubscribeAlways(
+            eventClass,
+            new TextChangedReceiver(callback, codeEditor)
+        );
+    }
+
+    public void SetVisible(IPlatformHandle androidViewControlHandle, bool visible)
+    {
+        var codeEditor = (androidViewControlHandle as AndroidViewControlHandle)?.View as CodeEditor;
+        if (codeEditor != null)
+        {
+            codeEditor.Visibility = visible ? (global::Android.Views.ViewStates)0 : (global::Android.Views.ViewStates)4;
+        }
+    }
+
+    public void RequestFocus(IPlatformHandle androidViewControlHandle)
+    {
+        var codeEditor = (androidViewControlHandle as AndroidViewControlHandle)?.View as CodeEditor;
+        if (codeEditor != null)
+        {
+            codeEditor.RequestFocus();
+        }
+    }
+
+    public void SetOnFocusChanged(IPlatformHandle androidViewControlHandle, Action<bool> callback)
+    {
+        var view = (androidViewControlHandle as AndroidViewControlHandle)?.View;
+        if (view != null)
+        {
+            view.FocusChange += (s, e) => callback(e.HasFocus);
+        }
+    }
+
+    private class TextChangedReceiver : Java.Lang.Object, EventManager.INoUnsubscribeReceiver
+    {
+        private readonly Action<string> _callback;
+        private readonly CodeEditor _editor;
+
+        public TextChangedReceiver(Action<string> callback, CodeEditor editor)  
+        {
+            _callback = callback;
+            _editor = editor;
+        }
+
+        public void OnEvent(Java.Lang.Object? evt)
+        {
+            _callback?.Invoke(_editor.Text.ToString());
+        }
+    }
+
+    private class FocusChangeListener : Java.Lang.Object, global::Android.Views.View.IOnFocusChangeListener
+    {
+        private readonly Action<bool> _callback;
+
+        public FocusChangeListener(Action<bool> callback)
+        {
+            _callback = callback;
+        }
+
+        public void OnFocusChange(global::Android.Views.View? v, bool hasFocus)
+        {
+            _callback?.Invoke(hasFocus);
+        }
     }
 }

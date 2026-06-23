@@ -13,7 +13,7 @@ using UndertaleModLib.Project;
 
 namespace UndertaleModToolAvalonia;
 
-public partial class ImportFromFileDialog : Window
+public partial class ImportFromFileDialogView : UserControl, IOverlayDialog
 {
     private CrossFileImporter _importer = null!;
     private ObservableCollection<ResourceDisplayItem> _availableItems = new();
@@ -23,12 +23,14 @@ public partial class ImportFromFileDialog : Window
     public bool ImportCompleted { get; private set; }
     public CrossFileImportResult? ImportResult { get; private set; }
 
-    public ImportFromFileDialog()
+    public event Action? CloseRequested;
+
+    public ImportFromFileDialogView()
     {
         InitializeComponent();
     }
 
-    public ImportFromFileDialog(UndertaleModLib.UndertaleData targetData) : this()
+    public ImportFromFileDialogView(UndertaleModLib.UndertaleData targetData) : this()
     {
         _importer = new CrossFileImporter(targetData);
         AvailableList.ItemsSource = _availableItems;
@@ -225,27 +227,26 @@ public partial class ImportFromFileDialog : Window
             }
         }
 
-        var msgWindow = new MessageWindow(summary, "Import Result", ok: true);
-        await msgWindow.ShowDialog(this);
+        // Show result via IView overlay
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(summary, "Import Result", ok: true);
+        }
 
-        Close(true);
+        CloseRequested?.Invoke();
     }
 
     private void CancelButton_Click(object? sender, RoutedEventArgs e)
     {
-        Close(false);
-    }
-
-    protected override void OnClosing(WindowClosingEventArgs e)
-    {
-        _importer?.Dispose();
-        base.OnClosing(e);
+        CloseRequested?.Invoke();
     }
 
     private async Task ShowErrorDialog(string message)
     {
-        var errorDialog = new ErrorDialog("Import Error", "An error occurred during import.", message);
-        await errorDialog.ShowDialog(this);
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(message, "Import Error", ok: true);
+        }
     }
 }
 

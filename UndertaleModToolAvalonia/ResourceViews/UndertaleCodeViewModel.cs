@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Input;
@@ -92,9 +92,9 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
         if (!result.Successful)
         {
             loaderWindow?.EnsureShown();
-            MessageWindow.Result undoChanges = await MainVM.ShowMessageDialog(result.PrintAllErrors(codeEntryNames: false)
+            DialogResult undoChanges = await MainVM.ShowMessageDialog(result.PrintAllErrors(codeEntryNames: false)
                 + "\n\nUndo changes?", title: "GML compilation error", ok: false, yes: true, no: true);
-            if (undoChanges == MessageWindow.Result.Yes)
+            if (undoChanges == DialogResult.Yes)
             {
                 await DecompileToGML();
             }
@@ -142,9 +142,9 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
         catch (Exception e)
         {
             loaderWindow?.EnsureShown();
-            MessageWindow.Result undoChanges = await MainVM.ShowMessageDialog(e.ToString()
+            DialogResult undoChanges = await MainVM.ShowMessageDialog(e.ToString()
                 + "\n\nUndo changes?", title: "ASM compilation error", ok: false, yes: true, no: true);
-            if (undoChanges == MessageWindow.Result.Yes)
+            if (undoChanges == DialogResult.Yes)
             {
                 await DecompileToASM();
             }
@@ -185,6 +185,8 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
         await DecompileToGML();
         await DecompileToASM();
 
+        View?.SetOriginalTextForModifiedTracking();
+
         CodeProcessEnd();
     }
 
@@ -198,8 +200,10 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
 
             if (await CompileFromGML())
             {
+                View?.ClearModifiedLines();
                 await DecompileToGML();
                 await DecompileToASM();
+                View?.SetOriginalTextForModifiedTracking();
             }
 
             CodeProcessEnd();
@@ -216,8 +220,10 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
 
             if (await CompileFromASM())
             {
+                View?.ClearModifiedLines();
                 await DecompileToGML();
                 await DecompileToASM();
+                View?.SetOriginalTextForModifiedTracking();
             }
             
             CodeProcessEnd();

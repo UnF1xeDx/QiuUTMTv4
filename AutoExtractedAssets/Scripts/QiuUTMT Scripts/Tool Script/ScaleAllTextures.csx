@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UndertaleModLib.Util;
-using ImageMagick;
+using SkiaSharp;
 
 // By Grossley
 
@@ -17,7 +17,7 @@ if (!ScriptQuestion("Visual glitches are very likely to occur in game. Do you ac
     return;
 }
 
-using (TextureWorker worker = new())
+using (TextureWorkerSkia worker = new())
 {
     double scale = -1;
     bool selectScale = true;
@@ -134,8 +134,8 @@ using (TextureWorker worker = new())
 
     void ScaleEmbeddedTexture(UndertaleEmbeddedTexture tex)
     {
-        MagickImage embImage = worker.GetEmbeddedTexture(tex);
-        using IMagickImage<byte> scaledEmbImage = TextureWorker.ResizeImage(embImage, (int)(embImage.Width * scale), (int)(embImage.Height * scale), PixelInterpolateMethod.Nearest);
+        SKBitmap embImage = worker.GetEmbeddedTexture(tex);
+        using SKBitmap scaledEmbImage = TextureWorkerSkia.ResizeImage(embImage, (int)(embImage.Width * scale), (int)(embImage.Height * scale), SKFilterQuality.None);
         try
         {
             uint width = (uint)scaledEmbImage.Width;
@@ -144,7 +144,7 @@ using (TextureWorker worker = new())
             {
                 //ScriptError("WARNING: texture page dimensions are not powers of 2. Sprite blurring is very likely in game.", "Unexpected texture dimensions");
             }
-            tex.TextureData.Image = GMImage.FromMagickImage(scaledEmbImage).ConvertToFormat(tex.TextureData.Image.Format);
+            tex.TextureData.Image = GMImage.FromSkiaImage(SKImage.FromBitmap(scaledEmbImage)).ConvertToFormat(tex.TextureData.Image.Format);
         }
         catch (Exception ex)
         {

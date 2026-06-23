@@ -7,19 +7,21 @@ using Avalonia.Platform.Storage;
 
 namespace UndertaleModToolAvalonia;
 
-public partial class ErrorDialog : Window
+public partial class ErrorDialogView : UserControl, IOverlayDialog
 {
     public string DialogTitle { get; set; } = "Error";
     public string Message { get; set; } = "";
     public string ErrorText { get; set; } = "";
 
-    public ErrorDialog()
+    public event Action? CloseRequested;
+
+    public ErrorDialogView()
     {
         InitializeComponent();
         DataContext = this;
     }
 
-    public ErrorDialog(string title, string message, string errorText) : this()
+    public ErrorDialogView(string title, string message, string errorText) : this()
     {
         DialogTitle = title ?? "Error";
         Message = message;
@@ -28,7 +30,7 @@ public partial class ErrorDialog : Window
 
     private void OKButton_Click(object? sender, RoutedEventArgs e)
     {
-        Close();
+        CloseRequested?.Invoke();
     }
 
     private async void CopyAllButton_Click(object? sender, RoutedEventArgs e)

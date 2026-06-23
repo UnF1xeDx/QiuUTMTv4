@@ -26,6 +26,7 @@ using Microsoft.Maui.Storage;
 using PropertyChanged.SourceGenerator;
 using UndertaleModLib;
 using UndertaleModLib.Models;
+using UndertaleModLib.Project;
 using UndertaleModToolAvalonia.QiuIO;
 using UTMTdrid;
 using FilePickerFileType = Avalonia.Platform.Storage.FilePickerFileType;
@@ -57,10 +58,19 @@ public partial class MainViewModel
 
     [Notify] private bool _IsEnabled = true;
 
+    /// <summary>
+    /// Indicates whether an overlay dialog (DialogOverlay or TextInputBox) is currently visible.
+    /// Used to hide native controls (like SoraEditor) that would render on top of overlays on Android.
+    /// </summary>
+    [Notify] private bool _IsOverlayActive;
+
     // Data
     [Notify] private UndertaleData? _Data;
     [Notify] private string? _DataPath;
     [Notify] private (uint Major, uint Minor, uint Release, uint Build) _DataVersion;
+
+    // Project
+    [Notify] private ProjectContext? _Project;
 
     IReadOnlyList<FilePickerFileType> dataFileTypes =
     [
@@ -136,6 +146,19 @@ public partial class MainViewModel
         Settings.OnLanguageChanged();
         Scripting = new(ServiceProvider);
         UpdateRecentFilesMenu();
+
+        // Re-apply custom background when settings change
+        Settings.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName is nameof(SettingsFile.BackgroundImagePath)
+                or nameof(SettingsFile.BackgroundOpacity)
+                or nameof(SettingsFile.BackgroundStretchMode))
+            {
+                if (View is MainView mainView)
+                    mainView.ApplyCustomBackground();
+            }
+        };
+
         if (View is MainView mainView)
             mainView.ApplyCustomBackground();
     }
@@ -349,7 +372,7 @@ public partial class MainViewModel
         }
     }
 
-    public async Task<MessageWindow.Result> ShowMessageDialog(string message, string? title = null, bool ok = true,
+    public async Task<DialogResult> ShowMessageDialog(string message, string? title = null, bool ok = true,
         bool yes = false, bool no = false, bool cancel = false)
     {
         return await View!.MessageDialog(message, title, ok, yes, no, cancel);
@@ -363,14 +386,14 @@ public partial class MainViewModel
             return true;
 
         var result = await ShowMessageDialog(message, ok: false, yes: true, no: true, cancel: true);
-        if (result == MessageWindow.Result.Yes)
+        if (result == DialogResult.Yes)
         {
             if (await FileSave())
             {
                 return true;
             }
         }
-        else if (result == MessageWindow.Result.No)
+        else if (result == DialogResult.No)
         {
             return true;
         }
@@ -475,17 +498,6 @@ public partial class MainViewModel
         DataPath = null;
 
         Tabs.Clear();
-
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            foreach (var window in desktop.Windows.ToList())
-            {
-                if (window is SearchInCodeWindow)
-                {
-                    window.Close();
-                }
-            }
-        }
     }
 
     public void UpdateVersion()
@@ -766,7 +778,7 @@ public partial class MainViewModel
 
         if (Settings.EnableQiuUtmtV3ScriptEngine&&!OperatingSystem.IsWindows())
         {
-            var loader = new LoaderWindow.LoaderWindowDroid(View.View);
+            var loader = new LoaderOverlay(View.View);
             await Task.Run(() =>
             {
                 var qf = new QiuFuncMain(file.TryGetLocalPath()??FileSystem.Current.CacheDirectory + "/temp.data",
@@ -783,13 +795,13 @@ public partial class MainViewModel
                                 loader.SetText(line);
                         });
                     }), null);
-                    CommandTextBoxText = $"{Path.GetFileName(filePath) ?? "Code"} finished!";
+                    Dispatcher.UIThread.Post(() => CommandTextBoxText = $"{Path.GetFileName(filePath) ?? "Code"} finished!");
                 }
                 catch (Exception e)
                 {
-                    CommandTextBoxText = $"{Path.GetFileName(filePath) ?? "Code"} throw exception!\n{e.Message}";
+                    Dispatcher.UIThread.Post(() => CommandTextBoxText = $"{Path.GetFileName(filePath) ?? "Code"} throw exception!\n{e.Message}");
                 }
-                loader.ShowOkButton();
+                Dispatcher.UIThread.Post(() => loader.ShowOkButton());
             });
         }
         else
@@ -878,7 +890,7 @@ public partial class MainViewModel
         if (res is UndertaleRoom room)
         {
             if (await ShowMessageDialog("Add the new room to the end of the room order list?", ok: false, yes: true,
-                    no: true) == MessageWindow.Result.Yes)
+                    no: true) == DialogResult.Yes)
                 Data.GeneralInfo?.RoomOrder.Add(new(room));
         }
 
@@ -985,5 +997,288 @@ public partial class MainViewModel
         {
             TabSelectedResourceIdString = "None";
         }
+    }
+
+    // Project system
+
+    IReadOnlyList<FilePickerFileType> projectFileTypes =
+    [
+        new FilePickerFileType("Project files (.json)")
+        {
+            Patterns = ["*.json"],
+        },
+        new FilePickerFileType("All files")
+        {
+            Patterns = ["*"],
+        },
+    ];
+
+    public async void ProjectNew()
+    {
+        if (Project is not null && Project.HasUnexportedAssets)
+        {
+            var result = await ShowMessageDialog(
+                "The current project has unexported assets. Are you sure you want to create a new project?",
+                title: "Project already open", ok: false, yes: true, no: true, cancel: true);
+            if (result != DialogResult.Yes)
+                return;
+        }
+
+        // If necessary, ask for a source data file
+        if (Data is null || DataPath is null)
+        {
+            var files = await View!.OpenFileDialog(new FilePickerOpenOptions()
+            {
+                Title = "Choose source data file",
+                FileTypeFilter = dataFileTypes,
+            });
+            if (files is null || files.Count != 1)
+                return;
+
+            using Stream stream = await files[0].OpenReadAsync();
+            if (!await LoadData(stream))
+                return;
+
+            DataPath = files[0].TryGetLocalPath();
+            if (DataPath is null)
+                return;
+        }
+
+        // Ask for name
+        string? projectName = await View!.TextBoxDialog("Choose a name for the new project:",
+            Data.GeneralInfo?.DisplayName?.Content ?? "New Mod", title: "Choose project name");
+        if (projectName is null)
+        {
+            CommandTextBoxText = "New project creation cancelled.";
+            return;
+        }
+        projectName = projectName.Trim();
+
+        // Prompt location for project directory
+        var folders = await View!.OpenFolderDialog(new FolderPickerOpenOptions()
+        {
+            Title = "Choose project directory"
+        });
+        if (folders is null || folders.Count != 1)
+        {
+            CommandTextBoxText = "New project creation cancelled.";
+            return;
+        }
+        string? directory = folders[0].TryGetLocalPath();
+        if (directory is null)
+        {
+            CommandTextBoxText = "New project creation cancelled.";
+            return;
+        }
+
+        // Ask for save file path
+        var saveFile = await View!.SaveFileDialog(new FilePickerSaveOptions()
+        {
+            Title = "Choose save file path for project",
+            FileTypeChoices = dataFileTypes,
+            DefaultExtension = ".win",
+        });
+        if (saveFile is null)
+        {
+            CommandTextBoxText = "New project creation cancelled.";
+            return;
+        }
+        string? saveFilePath = saveFile.TryGetLocalPath();
+
+        // Attempt making project at the specified location
+        ProjectContext newProjectContext;
+        try
+        {
+            newProjectContext = new(Data, DataPath, saveFilePath,
+                Path.Join(directory, "project.json"), projectName,
+                (f) => Dispatcher.UIThread.Invoke(f));
+        }
+        catch (ProjectException ex)
+        {
+            await ShowMessageDialog(ex.Message, title: "Failed to create project");
+            CommandTextBoxText = "Project creation failed.";
+            return;
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageDialog($"Error creating project: {ex}", title: "Failed to create project");
+            CommandTextBoxText = "Project creation failed.";
+            return;
+        }
+
+        AssignNewProject(newProjectContext);
+        CommandTextBoxText = $"Project \"{projectName}\" created successfully.";
+    }
+
+    public async void ProjectOpen()
+    {
+        if (Project is not null && Project.HasUnexportedAssets)
+        {
+            var result = await ShowMessageDialog(
+                "The current project has unexported assets. Are you sure you want to open a different project?",
+                title: "Project already open", ok: false, yes: true, no: true, cancel: true);
+            if (result != DialogResult.Yes)
+                return;
+        }
+
+        // Choose project file to open
+        var files = await View!.OpenFileDialog(new FilePickerOpenOptions()
+        {
+            Title = "Open project file",
+            FileTypeFilter = projectFileTypes,
+        });
+        if (files is null || files.Count != 1)
+            return;
+
+        string? projectFilePath = files[0].TryGetLocalPath();
+        if (projectFilePath is null)
+            return;
+
+        // If necessary, ask for a source data file
+        string? dataFilePathToLoad = null;
+        if (Data is null || DataPath is null)
+        {
+            var sourceFiles = await View!.OpenFileDialog(new FilePickerOpenOptions()
+            {
+                Title = "Choose source data file",
+                FileTypeFilter = dataFileTypes,
+            });
+            if (sourceFiles is null || sourceFiles.Count != 1)
+                return;
+
+            dataFilePathToLoad = sourceFiles[0].TryGetLocalPath();
+        }
+
+        // Ask for save file path
+        var saveFile = await View!.SaveFileDialog(new FilePickerSaveOptions()
+        {
+            Title = "Choose save file path for project",
+            FileTypeChoices = dataFileTypes,
+            DefaultExtension = ".win",
+        });
+        if (saveFile is null)
+            return;
+
+        string? saveFilePath = saveFile.TryGetLocalPath();
+
+        // Load data file if needed
+        if (dataFilePathToLoad is not null)
+        {
+            using Stream stream = File.OpenRead(dataFilePathToLoad);
+            if (!await LoadData(stream))
+                return;
+
+            DataPath = dataFilePathToLoad;
+        }
+
+        if (Data is null || DataPath is null)
+            return;
+
+        // Change main file path to the save data file path
+        string loadFilePath = DataPath;
+        string? originalDataPath = DataPath;
+
+        // Attempt loading project from the specific JSON
+        ProjectContext? newProjectContext = null;
+        IsEnabled = false;
+        await Task.Run(() =>
+        {
+            try
+            {
+                newProjectContext = ProjectContext.CreateWithDataFilePaths(loadFilePath, saveFilePath, projectFilePath);
+                newProjectContext.Import(Data, null, (f) => Dispatcher.UIThread.Invoke(f));
+            }
+            catch (ProjectException ex)
+            {
+                newProjectContext = null;
+                Dispatcher.UIThread.Post(() => ShowMessageDialog(ex.Message, title: "Failed to load project"));
+            }
+            catch (Exception ex)
+            {
+                newProjectContext = null;
+                Dispatcher.UIThread.Post(() => ShowMessageDialog($"Error loading project: {ex}", title: "Failed to load project"));
+            }
+        });
+        IsEnabled = true;
+
+        // Don't assign new project context if load failed
+        if (newProjectContext is null)
+        {
+            CommandTextBoxText = "Project failed to open.";
+            return;
+        }
+
+        // Update DataPath to save path
+        DataPath = saveFilePath;
+
+        AssignNewProject(newProjectContext);
+        CommandTextBoxText = $"Project \"{newProjectContext.Name}\" opened successfully.";
+    }
+
+    public async void ProjectSave()
+    {
+        if (Data is null || Project is null)
+            return;
+
+        IsEnabled = false;
+        bool success = false;
+        await Task.Run(() =>
+        {
+            try
+            {
+                Project.Export(true);
+                success = true;
+            }
+            catch (ProjectException ex)
+            {
+                Dispatcher.UIThread.Post(() => ShowMessageDialog(ex.Message, title: "Failed to save project"));
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.UIThread.Post(() => ShowMessageDialog($"Error saving project: {ex}", title: "Failed to save project"));
+            }
+        });
+        IsEnabled = true;
+        CommandTextBoxText = success ? "Project saved successfully." : "Project failed to save.";
+    }
+
+    public async void ProjectClose()
+    {
+        if (Project is null)
+            return;
+
+        if (Project.HasUnexportedAssets)
+        {
+            var result = await ShowMessageDialog(
+                "The current project has unexported assets. Are you sure you want to close the project?",
+                title: "Close project", ok: false, yes: true, no: true, cancel: true);
+            if (result != DialogResult.Yes)
+                return;
+        }
+
+        UnloadProject();
+        CommandTextBoxText = "Project closed.";
+    }
+
+    public void ProjectViewAssets()
+    {
+        if (Data is null || Project is null)
+            return;
+
+        // Open project assets as a tab
+        TabItemViewModel tab = new(new ProjectAssetsViewModel(Project));
+        Tabs.Add(tab);
+        TabSelected = tab;
+    }
+
+    private void UnloadProject()
+    {
+        Project = null;
+    }
+
+    private void AssignNewProject(ProjectContext project)
+    {
+        UnloadProject();
+        Project = project;
     }
 }

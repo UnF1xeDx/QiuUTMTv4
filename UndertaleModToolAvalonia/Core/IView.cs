@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -63,24 +63,19 @@ public interface IView
         return await topLevel.Launcher.LaunchUriAsync(uri);
     }
 
-    public async Task<MessageWindow.Result> MessageDialog(string message, string? title = null, bool ok = true,
+    public async Task<DialogResult> MessageDialog(string message, string? title = null, bool ok = true,
         bool yes = false, bool no = false, bool cancel = false)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            return await CommonDialog(message, title, ok, yes, no, cancel);
-        }
-
-        Window window = View.FindLogicalAncestorOfType<Window>() ?? throw new InvalidOperationException();
-        return await new MessageWindow(message, title, ok, yes, no, cancel).ShowDialog<MessageWindow.Result>(window);
+        return await CommonDialog(message, title, ok, yes, no, cancel);
     }
 
-    private async Task<MessageWindow.Result> CommonDialog(string message, string? title = null, bool ok = true,
+    private async Task<DialogResult> CommonDialog(string message, string? title = null, bool ok = true,
         bool yes = false, bool no = false, bool cancel = false)
     {
         TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
 #pragma warning disable CS8602 // 解引用可能出现空引用。
         View.Find<StackPanel>("TextInputBox").IsVisible = true;
+        SetOverlayActive(true);
         View.Find<TextBlock>("TitleText").Text = title ?? "对话框";
         View.Find<TextBlock>("MessageText").Text = message;
         View.Find<TextBox>("TextTextBox").Text = "";
@@ -128,21 +123,22 @@ public interface IView
             View.Find<Button>("ButtonYes").Click -= OnClickYes;
             View.Find<Button>("ButtonNo").Click -= OnClickNo;
             View.Find<StackPanel>("TextInputBox").IsVisible = false;
+            SetOverlayActive(false);
         }
 
         int a = await tcs.Task;
         switch (a)
         {
             case 1:
-                return MessageWindow.Result.OK;
+                return DialogResult.OK;
             case 2:
-                return MessageWindow.Result.Cancel;
+                return DialogResult.Cancel;
             case 3:
-                return MessageWindow.Result.Yes;
+                return DialogResult.Yes;
             case 4:
-                return MessageWindow.Result.No;
+                return DialogResult.No;
             default:
-                return MessageWindow.Result.Cancel;
+                return DialogResult.Cancel;
         }
     }
 
@@ -150,6 +146,7 @@ public interface IView
     {
         TaskCompletionSource<int> tcs = new TaskCompletionSource<int>();
         View.Find<StackPanel>("TextInputBox").IsVisible = true;
+        SetOverlayActive(true);
         View.Find<TextBlock>("TitleText").Text = title ?? "文本输入框";
         View.Find<TextBlock>("MessageText").Text = message;
         View.Find<TextBox>("TextTextBox").Text = textdef ?? "";
@@ -181,6 +178,7 @@ public interface IView
             View.Find<Button>("ButtonOk").Click -= OnClickOk;
             View.Find<Button>("ButtonCancel").Click -= OnClickCancel;
             View.Find<StackPanel>("TextInputBox").IsVisible = false;
+            SetOverlayActive(false);
         }
 
         int a = await tcs.Task;
@@ -198,26 +196,12 @@ public interface IView
     public async Task<string?> TextBoxDialog(string message, string text = "", string? title = null,
         bool isMultiline = false, bool isReadOnly = false)
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            return await CommonTextDialog(message, title, text);
-        }
-
-        Window window = View.FindLogicalAncestorOfType<Window>() ?? throw new InvalidOperationException();
-        return await new TextBoxWindow(message, text, title, isMultiline, isReadOnly).ShowDialog<string?>(window);
+        return await CommonTextDialog(message, title, text);
     }
 
     public ILoaderWindow LoaderOpen()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            return new LoaderWindow.LoaderWindowDroid(View);
-        }
-
-        Window window = View.FindLogicalAncestorOfType<Window>() ?? throw new InvalidOperationException();
-        LoaderWindow loaderWindow = new();
-        loaderWindow.ShowDelayed(window);
-        return loaderWindow;
+        return new LoaderOverlay(View);
     }
 
     public async Task SettingsDialog()
@@ -229,23 +213,28 @@ public interface IView
 
     public void SearchInCodeOpen()
     {
-        if (!OperatingSystem.IsWindows())
-        {
-            TabItemViewModel tab = new(new SearchInCodeViewModel());
-            MainViewModel.Me.Tabs.Add(tab);
-            MainViewModel.Me.TabSelected = tab;
-            return;
-        }
-
-        new SearchInCodeWindow()
-        {
-            DataContext = new SearchInCodeWindowModel(),
-        }.Show();
+        TabItemViewModel tab = new(new SearchInCodeViewModel());
+        MainViewModel.Me.Tabs.Add(tab);
+        MainViewModel.Me.TabSelected = tab;
     }
 
     public IInputElement? GetFocusedElement()
     {
         TopLevel topLevel = TopLevel.GetTopLevel(View)!;
         return topLevel.FocusManager?.GetFocusedElement();
+    }
+
+    // Overlay dialog support - implemented in MainView
+    Task<object?> ShowOverlayDialog(UserControl dialog);
+    Task<TResult> ShowOverlayDialog<TResult>(UserControl dialog, Func<TResult> getResult);
+    void CloseOverlayDialog();
+
+    /// <summary>
+    /// Sets the IsOverlayActive flag on MainViewModel so that native controls
+    /// (like SoraEditor) can hide themselves when overlays are shown.
+    /// </summary>
+    private void SetOverlayActive(bool active)
+    {
+        MainViewModel.Me.IsOverlayActive = active;
     }
 }

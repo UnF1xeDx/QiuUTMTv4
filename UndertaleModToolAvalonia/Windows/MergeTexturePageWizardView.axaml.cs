@@ -19,7 +19,7 @@ using UndertaleModLib.Util;
 
 namespace UndertaleModToolAvalonia;
 
-public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
+public partial class MergeTexturePageWizardView : UserControl, INotifyPropertyChanged, IOverlayDialog
 {
     private static readonly MainViewModel mainVM = App.Services.GetRequiredService<MainViewModel>();
 
@@ -48,15 +48,16 @@ public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
     }
 
 #pragma warning disable CS0067
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public new event PropertyChangedEventHandler? PropertyChanged;
+    public event Action? CloseRequested;
 #pragma warning restore CS0067
 
-    public MergeTexturePageWizard()
+    public MergeTexturePageWizardView()
     {
         InitializeComponent();
     }
 
-    public MergeTexturePageWizard(UndertaleEmbeddedTexture texturePage) : this()
+    public MergeTexturePageWizardView(UndertaleEmbeddedTexture texturePage) : this()
     {
         sourcePage = texturePage ?? throw new ArgumentNullException(nameof(texturePage));
         sourceItems = mainVM.Data!.TexturePageItems
@@ -815,7 +816,7 @@ public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
     private void Cancel_Click(object? sender, RoutedEventArgs e)
     {
         CancelPreviewProcessing();
-        Close(false);
+        CloseRequested?.Invoke();
     }
 
     private async void Confirm_Click(object? sender, RoutedEventArgs e)
@@ -868,12 +869,6 @@ public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
             if (item is EntryItem entryItem)
                 entryItem.IsSelected = true;
         UpdateSelectionCount();
-    }
-
-    protected override void OnClosing(WindowClosingEventArgs e)
-    {
-        CancelPreviewProcessing();
-        base.OnClosing(e);
     }
 
     private async Task PerformMerge()
@@ -1072,7 +1067,7 @@ public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
             string targetName = targetPage.Name?.Content ?? targetPage.ToString() ?? "Unknown";
             await ShowMessage($"Successfully merged {selected.Count} item(s) to {targetName}.");
 
-            Close(true);
+            CloseRequested?.Invoke();
         }
         finally
         {
@@ -1083,20 +1078,26 @@ public partial class MergeTexturePageWizard : Window, INotifyPropertyChanged
 
     private async Task ShowWarning(string message)
     {
-        var msgWindow = new MessageWindow(message, "Warning", ok: true);
-        await msgWindow.ShowDialog(this);
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(message, "Warning", ok: true);
+        }
     }
 
     private async Task ShowError(string message)
     {
-        var msgWindow = new MessageWindow(message, "Error", ok: true);
-        await msgWindow.ShowDialog(this);
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(message, "Error", ok: true);
+        }
     }
 
     private async Task ShowMessage(string message)
     {
-        var msgWindow = new MessageWindow(message, "Merge Texture Page", ok: true);
-        await msgWindow.ShowDialog(this);
+        if (MainViewModel.Me.View is IView view)
+        {
+            await view.MessageDialog(message, "Merge Texture Page", ok: true);
+        }
     }
 }
 
@@ -1129,19 +1130,15 @@ public class EntryItem : INotifyPropertyChanged
     }
 }
 
-public class BooleanToVisibilityConverter : global::Avalonia.Data.Converters.IValueConverter
+public class BooleanToVisibilityConverter : Avalonia.Data.Converters.IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, global::System.Globalization.CultureInfo culture)
+    public object Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
     {
-        if (value is bool b)
-            return b;
-        return false;
+        return value is true;
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, global::System.Globalization.CultureInfo culture)
+    public object ConvertBack(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
     {
-        if (value is bool b)
-            return b;
-        return false;
+        return value is true;
     }
 }

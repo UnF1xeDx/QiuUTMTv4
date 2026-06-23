@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using UndertaleModLib.Util;
+using SkiaSharp;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 
@@ -80,7 +81,7 @@ void ExportTextures()
     Parallel.ForEach(texturesToExport, new ParallelOptions { MaxDegreeOfParallelism = outerLimit }, kvp =>
     {
         // separate worker for each page to bound memory usage
-        using (TextureWorker localWorker = new TextureWorker())
+        using (TextureWorkerSkia localWorker = new TextureWorkerSkia())
         {
             foreach (TextureToExport tte in kvp.Value)
             {

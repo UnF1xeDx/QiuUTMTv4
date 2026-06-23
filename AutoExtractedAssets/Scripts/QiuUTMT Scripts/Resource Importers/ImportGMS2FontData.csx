@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using UndertaleModLib;
 using UndertaleModLib.Util;
+using SkiaSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -96,7 +97,7 @@ else if (attemptToFixFontNotAppearing)
 }
 
 // Get texture properties
-(int parsedWidth, int parsedHeight) = TextureWorker.GetImageSizeFromFile(fontTexturePath);
+(int parsedWidth, int parsedHeight) = TextureWorkerSkia.GetImageSizeFromFile(fontTexturePath);
 if (parsedWidth == -1 || parsedHeight == -1)
     throw new ScriptException("Invalid font texture image");
 ushort width = (ushort)parsedWidth;

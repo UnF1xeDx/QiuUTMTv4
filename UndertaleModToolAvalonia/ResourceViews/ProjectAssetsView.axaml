@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:UndertaleModToolAvalonia"
+             mc:Ignorable="d"
+             x:Class="UndertaleModToolAvalonia.ProjectAssetsView"
+             x:DataType="l:ProjectAssetsViewModel">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="The following assets are marked for export, but have not been exported yet." TextWrapping="Wrap" Margin="0,0,0,4"/>
+        <TextBlock Grid.Row="1" Text="Unexported assets will be lost when saving. Export the project to save them." TextWrapping="Wrap" Margin="0,0,0,8"/>
+        <DataGrid Grid.Row="2" Name="AssetsDataGrid" IsReadOnly="True" CanUserResizeColumns="True"
+                  ItemsSource="{Binding Assets}"
+                  DoubleTapped="DataGrid_DoubleTapped" KeyDown="DataGrid_KeyDown">
+            <DataGrid.Styles>
+                <Style Selector="DataGridRow">
+                    <Setter Property="ContextMenu">
+                        <ContextMenu>
+                            <MenuItem Header="Open" Click="MenuItemOpen_Click"/>
+                            <MenuItem Header="Open in new tab" Click="MenuItemOpenInNewTab_Click"/>
+                            <MenuItem Header="Unmark for export" Click="MenuItemUnmarkForExport_Click"/>
+                        </ContextMenu>
+                    </Setter>
+                </Style>
+            </DataGrid.Styles>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" Width="Auto">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="Name"/>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Asset Type" Width="Auto">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="AssetType"/>
+                    </DataGridTextColumn.Binding>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

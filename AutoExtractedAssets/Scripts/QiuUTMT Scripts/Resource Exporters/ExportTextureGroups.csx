@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -25,7 +26,7 @@ if (mainOutputFolder is null)
 bool padding = ScriptQuestion("Use padding?");
 int processTgin = 0;
 
-TextureWorker worker = null;
+TextureWorkerSkia worker = null;
 using (worker = new())
 {
     await Task.Run(() =>

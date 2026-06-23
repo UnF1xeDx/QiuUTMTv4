@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
-using ImageMagick;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -94,14 +94,14 @@ await Task.Run(() =>
 
         try
         {
-            using MagickImage image = TextureWorker.ReadBGRAImageFromFile(filename);
+            using SKBitmap image = TextureWorkerSkia.ReadBGRAImageFromFile(filename);
             UndertaleTexturePageItem item = sprite.Textures[frame].Texture;
-            if ((int)image.Width != item.TargetWidth || (int)image.Height != item.TargetHeight)
+            if (image.Width != item.TargetWidth || image.Height != item.TargetHeight)
             {
                 // Generic error message when the width/height mismatch
                 string error = $"Incorrect dimensions of {strippedFilename}; should be {item.TargetWidth}x{item.TargetHeight}, to fit on the texture page." +
                                "\n\nStopping early. Some sprites may already be modified.";
-                if ((int)image.Width == sprite.Width && (int)image.Height == sprite.Height)
+                if (image.Width == sprite.Width && image.Height == sprite.Height)
                 {
                     // Sprite was likely exported with padding - give a more helpful error message
                     error = $"{strippedFilename} appears to be exported with padding. The resulting sprite would be too large to fit in the same space on the texture page. " +

@@ -7,45 +7,45 @@
              xmlns:undertalem="clr-namespace:UndertaleModLib.Models;assembly=UndertaleModLib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="UndertaleModToolAvalonia.GeneralInfoView"
-             x:DataType="l:GeneralInfoViewModel" xmlns:strings="clr-namespace:UndertaleModToolAvalonia.Assets" >
+             x:DataType="l:GeneralInfoViewModel" xmlns:loc="clr-namespace:UndertaleModToolAvalonia.Localization" >
     <UserControl.Resources>
         <l:ByteArrayToStringConverter x:Key="ByteArrayToStringConverter" />
         <l:UndertaleColorToColorConverter x:Key="UndertaleColorToColorConverter" />
     </UserControl.Resources>
     <StackPanel Classes="PaddedProperties">
         <StackPanel IsVisible="{Binding GeneralInfo, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock FontWeight="Bold" Text="{x:Static strings:Strings.General_info}"/>
+            <TextBlock FontWeight="Bold" Text="{loc:Loc General_info}"/>
             <Separator/>
 
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static strings:Strings.Disable_GMS_debugger}"/>
+                <Label Content="{loc:Loc Disable_GMS_debugger}"/>
                 <CheckBox IsChecked="{Binding GeneralInfo.IsDebuggerDisabled}"/>
 
-                <Label Content="{x:Static strings:Strings.Bytecode_version}"/>
+                <Label Content="{loc:Loc Bytecode_version}"/>
                 <TextBox Text="{Binding GeneralInfo.BytecodeVersion}"/>
 
-                <Label Content="{x:Static strings:Strings.FileName}"/>
+                <Label Content="{loc:Loc FileName}"/>
                 <l:UndertaleStringReferenceView Reference="{Binding GeneralInfo.FileName}"/>
 
-                <Label Content="{x:Static strings:Strings.Config}"/>
+                <Label Content="{loc:Loc Config}"/>
                 <l:UndertaleStringReferenceView Reference="{Binding GeneralInfo.Config}"/>
             
-                <Label Content="{x:Static strings:Strings.Last_object_ID}"/>
+                <Label Content="{loc:Loc Last_object_ID}"/>
                 <TextBox Text="{Binding GeneralInfo.LastObj}"/>
 
-                <Label Content="{x:Static strings:Strings.Last_tile_ID}"/>
+                <Label Content="{loc:Loc Last_tile_ID}"/>
                 <TextBox Text="{Binding GeneralInfo.LastTile}"/>
 
-                <Label Content="{x:Static strings:Strings.Game_ID}"/>
+                <Label Content="{loc:Loc Game_ID}"/>
                 <TextBox Text="{Binding GeneralInfo.GameID}"/>
 
-                <Label Content="{x:Static strings:Strings.DirectPlay_GUID}"/>
+                <Label Content="{loc:Loc DirectPlay_GUID}"/>
                 <TextBox Text="{Binding GeneralInfo.DirectPlayGuid}"/>
 
-                <Label Content="{x:Static strings:Strings.Name}"/>
+                <Label Content="{loc:Loc Name}"/>
                 <l:UndertaleStringReferenceView Reference="{Binding GeneralInfo.Name}"/>
 
-                <Label Content="{x:Static strings:Strings.Version}"/>
+                <Label Content="{loc:Loc Version}"/>
                 <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="*,Auto,*,Auto,*,Auto,*">
                     <TextBox Text="{Binding GeneralInfo.Major}"/>
                     <TextBlock Text="."/>
@@ -56,47 +56,47 @@
                     <TextBox Text="{Binding GeneralInfo.Build}"/>
                 </Grid>
 
-                <Label Content="{x:Static strings:Strings.Default_window_size}"/>
+                <Label Content="{loc:Loc Default_window_size}"/>
                 <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="*,Auto,*">
                     <TextBox Text="{Binding GeneralInfo.DefaultWindowWidth}"/>
                     <TextBlock Text="x"/>
                     <TextBox Text="{Binding GeneralInfo.DefaultWindowHeight}"/>
                 </Grid>
 
-                <Label Content="{x:Static strings:Strings.Flags}"/>
+                <Label Content="{loc:Loc Flags}"/>
                 <l:FlagsBoxView Value="{Binding GeneralInfo.Info}" />
 
-                <Label Content="{x:Static strings:Strings.License_MD5}"/>
+                <Label Content="{loc:Loc License_MD5}"/>
                 <TextBox Text="{Binding GeneralInfo.LicenseMD5, Converter={StaticResource ByteArrayToStringConverter}}" />
 
                 <!-- TODO: Format it as hex -->
-                <Label Content="{x:Static strings:Strings.License_CRC32}"/>
+                <Label Content="{loc:Loc License_CRC32}"/>
                 <TextBox Text="{Binding GeneralInfo.LicenseCRC32}" />
 
                 <!-- TODO: Format it as date -->
-                <Label Content="{x:Static strings:Strings.Timestamp}"/>
+                <Label Content="{loc:Loc Timestamp}"/>
                 <TextBox Text="{Binding GeneralInfo.Timestamp}" />
 
-                <Label Content="{x:Static strings:Strings.Display_name}"/>
+                <Label Content="{loc:Loc Display_name}"/>
                 <l:UndertaleStringReferenceView Reference="{Binding GeneralInfo.DisplayName}" />
 
-                <Label Content="{x:Static strings:Strings.Active_targets}"/>
+                <Label Content="{loc:Loc Active_targets}"/>
                 <TextBox Text="{Binding GeneralInfo.ActiveTargets}" />
 
-                <Label Content="{x:Static strings:Strings.Function_classifications}"/>
+                <Label Content="{loc:Loc Function_classifications}"/>
                 <l:FlagsBoxView Value="{Binding GeneralInfo.FunctionClassifications}" />
 
-                <Label Content="{x:Static strings:Strings.Steam_AppID}"/>
+                <Label Content="{loc:Loc Steam_AppID}"/>
                 <TextBox Text="{Binding GeneralInfo.SteamAppID}" />
 
-                <Label Content="{x:Static strings:Strings.Debugger_port}"/>
+                <Label Content="{loc:Loc Debugger_port}"/>
                 <TextBox Text="{Binding GeneralInfo.DebuggerPort}" />
 
-                <Label Content="{x:Static strings:Strings.Room_order}"/>
-                <Expander Header="{x:Static strings:Strings.Rooms}">
+                <Label Content="{loc:Loc Room_order}"/>
+                <Expander Header="{loc:Loc Rooms}">
                     <l:EditableDataGrid ItemsSource="{Binding GeneralInfo.RoomOrder}" ItemFactory="{Binding CreateRoomOrderItem}" HeadersVisibility="None">
                         <l:EditableDataGrid.Columns>
-                            <DataGridTemplateColumn Header="{x:Static strings:Strings.Room}" Width="1*">
+                            <DataGridTemplateColumn Header="{loc:Loc Room}" Width="1*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <DataTemplate.DataType>
@@ -111,77 +111,77 @@
                 </Expander>
 
                 <!-- TODO: Make the following only visible if GMS2 -->
-                <Label Content="{x:Static strings:Strings.FPS}"/>
+                <Label Content="{loc:Loc FPS}"/>
                 <TextBox Text="{Binding GeneralInfo.GMS2FPS}" />
 
-                <Label Content="{x:Static strings:Strings.Allow_statistics}"/>
+                <Label Content="{loc:Loc Allow_statistics}"/>
                 <CheckBox IsChecked="{Binding GeneralInfo.GMS2AllowStatistics}"/>
 
                 <!-- TODO: Convert to GUID -->
-                <Label Content="{x:Static strings:Strings.Game_GUID}"/>
+                <Label Content="{loc:Loc Game_GUID}"/>
                 <TextBox Text="{Binding GeneralInfo.GMS2GameGUID, Converter={StaticResource ByteArrayToStringConverter}}" />
             </Grid>
         </StackPanel>
 
         <StackPanel IsVisible="{Binding Options, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock FontWeight="Bold" Text="{x:Static strings:Strings.Options}"/>
+            <TextBlock FontWeight="Bold" Text="{loc:Loc Options}"/>
             <Separator/>
 
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static strings:Strings.Shader_extension_flag}"/>
+                <Label Content="{loc:Loc Shader_extension_flag}"/>
                 <TextBox Text="{Binding Options.ShaderExtensionFlag}"/>
 
-                <Label Content="{x:Static strings:Strings.Shader_extension_version}"/>
+                <Label Content="{loc:Loc Shader_extension_version}"/>
                 <TextBox Text="{Binding Options.ShaderExtensionVersion}"/>
 
-                <Label Content="{x:Static strings:Strings.Flags}"/>
+                <Label Content="{loc:Loc Flags}"/>
                 <l:FlagsBoxView Value="{Binding Options.Info}"/>
 
-                <Label Content="{x:Static strings:Strings.Scale}"/>
+                <Label Content="{loc:Loc Scale}"/>
                 <TextBox Text="{Binding Options.Scale}"/>
 
-                <Label Content="{x:Static strings:Strings.Window_color}"/>
+                <Label Content="{loc:Loc Window_color}"/>
                 <ColorPicker Color="{Binding Options.WindowColor, Converter={StaticResource UndertaleColorToColorConverter}}" />
 
-                <Label Content="{x:Static strings:Strings.Color_depth}"/>
+                <Label Content="{loc:Loc Color_depth}"/>
                 <TextBox Text="{Binding Options.ColorDepth}"/>
 
-                <Label Content="{x:Static strings:Strings.Resolution}"/>
+                <Label Content="{loc:Loc Resolution}"/>
                 <TextBox Text="{Binding Options.Resolution}"/>
 
-                <Label Content="{x:Static strings:Strings.Frequency}"/>
+                <Label Content="{loc:Loc Frequency}"/>
                 <TextBox Text="{Binding Options.Frequency}"/>
 
-                <Label Content="{x:Static strings:Strings.Vertex_sync}"/>
+                <Label Content="{loc:Loc Vertex_sync}"/>
                 <TextBox Text="{Binding Options.VertexSync}"/>
 
-                <Label Content="{x:Static strings:Strings.Priority}"></Label>
+                <Label Content="{loc:Loc Priority}"></Label>
                 <TextBox Text="{Binding Options.Priority}"/>
 
-                <Label Content="{x:Static strings:Strings.Back_image}"></Label>
+                <Label Content="{loc:Loc Back_image}"></Label>
                 <l:UndertaleResourceReferenceView Reference="{Binding Options.BackImage.Texture}" ReferenceType="{x:Type undertalem:UndertaleTexturePageItem}" />
 
-                <Label Content="{x:Static strings:Strings.Front_image}"></Label>
+                <Label Content="{loc:Loc Front_image}"></Label>
                 <l:UndertaleResourceReferenceView Reference="{Binding Options.FrontImage.Texture}" ReferenceType="{x:Type undertalem:UndertaleTexturePageItem}" />
 
-                <Label Content="{x:Static strings:Strings.Load_image}"></Label>
+                <Label Content="{loc:Loc Load_image}"></Label>
                 <l:UndertaleResourceReferenceView Reference="{Binding Options.LoadImage.Texture}" ReferenceType="{x:Type undertalem:UndertaleTexturePageItem}" />
 
-                <Label Content="{x:Static strings:Strings.Load_alpha}"></Label>
+                <Label Content="{loc:Loc Load_alpha}"></Label>
                 <TextBox Text="{Binding Options.LoadAlpha}" />
 
-                <Label Content="{x:Static strings:Strings.Constants}"></Label>
-                <Expander Header="{x:Static strings:Strings.Constants}">
+                <Label Content="{loc:Loc Constants}"></Label>
+                <Expander Header="{loc:Loc Constants}">
                     <l:EditableDataGrid ItemsSource="{Binding Options.Constants}" ItemFactory="{Binding CreateConstant}">
                         <l:EditableDataGrid.Columns>
-                            <DataGridTemplateColumn Header="{x:Static strings:Strings.Name}" Width="1*">
+                            <DataGridTemplateColumn Header="{loc:Loc Name}" Width="1*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate DataType="{x:Type undertalem:UndertaleOptions+Constant}">
                                         <l:UndertaleStringReferenceView Reference="{Binding Name}" />
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="{x:Static strings:Strings.Value}" Width="1*">
+                            <DataGridTemplateColumn Header="{loc:Loc Value}" Width="1*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate DataType="{x:Type undertalem:UndertaleOptions+Constant}">
                                         <l:UndertaleStringReferenceView Reference="{Binding Value}" />
@@ -195,17 +195,17 @@
         </StackPanel>
 
         <StackPanel IsVisible="{Binding Language, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock FontWeight="Bold" Text="{x:Static strings:Strings.Language}"/>
+            <TextBlock FontWeight="Bold" Text="{loc:Loc Language}"/>
             <Separator/>
 
             <Grid l:AutoGridBehavior.Enable="True" ColumnDefinitions="1*,3*">
-                <Label Content="{x:Static strings:Strings.Unknown}"></Label>
+                <Label Content="{loc:Loc Unknown}"></Label>
                 <TextBox Text="{Binding Language.Unknown1}"/>
                 
-                <Label Content="{x:Static strings:Strings.Language_count}"></Label>
+                <Label Content="{loc:Loc Language_count}"></Label>
                 <TextBox Text="{Binding Language.LanguageCount}"/>
                 
-                <Label Content="{x:Static strings:Strings.Entry_count}"></Label>
+                <Label Content="{loc:Loc Entry_count}"></Label>
                 <TextBox Text="{Binding Language.EntryCount}"/>
                 
                 <!-- TODO: Language editor -->

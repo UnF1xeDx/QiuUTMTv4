@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:l="clr-namespace:UndertaleModToolAvalonia"
+             mc:Ignorable="d"
+             x:Class="UndertaleModToolAvalonia.MergeTexturePageWizardView"
+             x:DataType="l:MergeTexturePageWizardView"
+             Width="900" MinWidth="750">
+    <UserControl.Resources>
+        <l:ToSKImageUpdaterConverter x:Key="ToSKImageUpdaterConverter" />
+        <l:BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+    <Border Background="{DynamicResource SystemControlBackgroundAltHighBrush}" Padding="8" CornerRadius="4">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Name="StepTitle" FontWeight="Bold" FontSize="14" Margin="0,0,0,6"/>
+
+            <Grid Grid.Row="1">
+                <!-- Step 1: Select texture page items -->
+                <Grid Name="Step1Panel">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Margin="0,0,4,0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1">
+                        <ScrollViewer Name="Step1ScrollViewer" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                            <l:SKImageViewer Name="Step1TextureViewer" ClipToBounds="True" />
+                        </ScrollViewer>
+                    </Border>
+
+                    <Grid Grid.Column="1" Margin="4,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Name="SelectionCountText" Margin="0,0,0,4"/>
+
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,4" Spacing="4">
+                            <Button Content="Select All" Click="SelectAll_Click" Padding="6,2"/>
+                            <Button Content="Deselect All" Click="DeselectAll_Click" Padding="6,2"/>
+                            <Button Content="Invert Selection" Click="InvertSelection_Click" Padding="6,2"/>
+                        </StackPanel>
+
+                        <ListBox Grid.Row="2" Name="EntryListBox" SelectionMode="Multiple"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="l:EntryItem">
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" Content="{Binding DisplayName}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock Grid.Row="3" Name="Step1HintText" Foreground="{DynamicResource SystemControlDisabledBaseMediumBrush}" FontStyle="Italic" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Step 2: Preview and merge -->
+                <Grid Name="Step2Panel" IsVisible="False">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Source preview -->
+                    <Grid Grid.Column="0" Margin="0,0,4,0" Name="SourcePreviewPanel">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Source Preview" Margin="0,0,0,4"/>
+                        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1" Margin="0,0,0,4">
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <l:SKImageViewer Name="SourcePreviewViewer" ClipToBounds="True" />
+                            </ScrollViewer>
+                        </Border>
+                        <TextBlock Grid.Row="2" Name="SourcePreviewInfoText" Foreground="{DynamicResource SystemControlDisabledBaseMediumBrush}"/>
+                    </Grid>
+
+                    <!-- Target page -->
+                    <Grid Grid.Column="1" Margin="4,0,4,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Target Page" Margin="0,0,0,4"/>
+                        <ComboBox Grid.Row="1" Name="TargetPageCombo" SelectionChanged="TargetPageCombo_SelectionChanged" Margin="0,0,0,4" HorizontalAlignment="Stretch"/>
+                        <Border Grid.Row="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1" Margin="0,0,0,4">
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <l:SKImageViewer Name="TargetThumbnailViewer" ClipToBounds="True" />
+                            </ScrollViewer>
+                        </Border>
+                        <TextBlock Grid.Row="3" Name="TargetInfoText" Foreground="{DynamicResource SystemControlDisabledBaseMediumBrush}"/>
+                    </Grid>
+
+                    <!-- Merge preview -->
+                    <Grid Grid.Column="2" Margin="4,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="Preview" Margin="0,0,0,4"/>
+                        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1">
+                            <ScrollViewer Name="PreviewScrollViewer" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                                <l:SKImageViewer Name="PreviewViewer" ClipToBounds="True" />
+                            </ScrollViewer>
+                        </Border>
+                        <TextBlock Grid.Row="2" Name="PreviewInfoText" Foreground="{DynamicResource SystemControlDisabledBaseMediumBrush}" Margin="0,4,0,0"/>
+                    </Grid>
+                </Grid>
+            </Grid>
+
+            <!-- Navigation buttons -->
+            <Grid Grid.Row="2" Margin="0,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Name="BackButton" Grid.Column="0" Content="Back" Click="Back_Click" Padding="12,4" Margin="0,0,8,0" IsVisible="False"/>
+                <Button Name="NextButton" Grid.Column="2" Content="Next" Click="Next_Click" Padding="12,4" Margin="0,0,8,0"/>
+                <Button Name="ConfirmButton" Grid.Column="2" Content="Confirm" Click="Confirm_Click" Padding="12,4" Margin="0,0,8,0" IsVisible="False"/>
+                <Button Name="CancelButton" Grid.Column="3" Content="Cancel" Click="Cancel_Click" Padding="12,4"/>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

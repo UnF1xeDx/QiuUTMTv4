@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -43,7 +44,7 @@ foreach (string file in dirFiles)
     {
         throw new ScriptException($"{fileNameWithExtension} could not be imported as the sprite {spriteName} does not exist.");
     }
-    (int imgWidth, int imgHeight) = TextureWorker.GetImageSizeFromFile(file);
+    (int imgWidth, int imgHeight) = TextureWorkerSkia.GetImageSizeFromFile(file);
     (int expectedMaskWidth, int expectedMaskHeight) = foundSprite.CalculateMaskDimensions(Data);
     if (expectedMaskWidth != imgWidth || expectedMaskHeight != imgHeight)
     {
@@ -119,7 +120,7 @@ await Task.Run(() =>
 
         // Import the mask.
         (int maskWidth, int maskHeight) = sprite.CalculateMaskDimensions(Data);
-        var maskData = TextureWorker.ReadMaskData(file, maskWidth, maskHeight);
+        var maskData = TextureWorkerSkia.ReadMaskData(file, maskWidth, maskHeight);
         MainThreadAction(() =>
         {
             sprite.CollisionMasks[frame].Data = maskData;

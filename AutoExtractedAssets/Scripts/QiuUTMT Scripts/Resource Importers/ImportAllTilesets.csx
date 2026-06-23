@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UndertaleModLib.Util;
-using ImageMagick;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -41,7 +41,7 @@ void ImportTileset(UndertaleBackground tileset)
             string path = Paths.JoinVerifyWithinDirectory(subPath, filename);
             if (File.Exists(path))
             {
-                using MagickImage img = TextureWorker.ReadBGRAImageFromFile(path);
+                using SKBitmap img = TextureWorkerSkia.ReadBGRAImageFromFile(path);
                 MainThreadAction(() =>
                 {
                     tileset.Texture.ReplaceTexture(img);

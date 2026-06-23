@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UndertaleModLib.Util;
-using ImageMagick;
+using SkiaSharp;
 
 string importFolderA = PromptChooseDirectory();
 if (importFolderA is null) 
@@ -29,16 +29,20 @@ foreach (FileInfo fileA in filesA)
         continue;
     
     // Load both images, and calculate dimensions of resulting image
-    using MagickImage imageA = TextureWorker.ReadBGRAImageFromFile(Paths.JoinVerifyWithinDirectory(importFolderA, fileA.Name));
-    using MagickImage imageB = TextureWorker.ReadBGRAImageFromFile(Paths.JoinVerifyWithinDirectory(importFolderB, fileA.Name));
-    uint width = imageA.Width + imageB.Width;
-    uint height = Math.Max(imageA.Height, imageB.Height);
+    using SKBitmap imageA = TextureWorkerSkia.ReadBGRAImageFromFile(Paths.JoinVerifyWithinDirectory(importFolderA, fileA.Name));
+    using SKBitmap imageB = TextureWorkerSkia.ReadBGRAImageFromFile(Paths.JoinVerifyWithinDirectory(importFolderB, fileA.Name));
+    int width = imageA.Width + imageB.Width;
+    int height = Math.Max(imageA.Height, imageB.Height);
 
     // Make combined image, and composite both images onto it
-    using MagickImage outputImage = new(MagickColor.FromRgba(0, 0, 0, 0), width, height);
-    outputImage.Composite(imageA, 0, 0, CompositeOperator.Copy);
-    outputImage.Composite(imageB, (int)imageA.Width, 0, CompositeOperator.Copy);
+    using SKBitmap outputImage = new(width, height);
+    using (SKCanvas canvas = new(outputImage))
+    {
+        canvas.Clear(SKColors.Transparent);
+        canvas.DrawBitmap(imageA, 0, 0);
+        canvas.DrawBitmap(imageB, imageA.Width, 0);
+    }
 
     // Save image to output folder
-    TextureWorker.SaveImageToFile(outputImage, Paths.JoinVerifyWithinDirectory(exportFolder, fileA.Name));
+    TextureWorkerSkia.SaveImageToFile(outputImage, Paths.JoinVerifyWithinDirectory(exportFolder, fileA.Name));
 }

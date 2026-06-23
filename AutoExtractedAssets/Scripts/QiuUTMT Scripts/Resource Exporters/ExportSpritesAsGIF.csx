@@ -1,22 +1,20 @@
 /*
-    Exports sprites as a GIF.
+    Exports sprites as individual PNG frames in a subfolder per sprite.
     Script made by CST1229, with parts based off of ExportAllSprites.csx.
-    
-    Was originally ExportSpritesAsGIFDLL.csx and used an external library,
-    but UTMT now uses ImageMagick and that has gif support so I'm using it.
- */
 
-// revision 2: handle breaking Magick.NET changes
+    Originally ExportSpritesAsGIF.csx using Magick.NET GIF support.
+    Rewritten to use SkiaSharp, exporting frames as PNGs + info.txt instead.
+ */
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using UndertaleModLib.Models;
 using UndertaleModLib.Util;
 using UndertaleModLib.Scripting;
-using ImageMagick;
+using SkiaSharp;
 
 EnsureDataLoaded();
 
@@ -31,7 +29,7 @@ await ExtractSprites(folder, filter);
 
 async Task ExtractSprites(string folder, string prefix)
 {
-    using TextureWorker worker = new TextureWorker();
+    using TextureWorkerSkia worker = new TextureWorkerSkia();
     IList<UndertaleSprite> sprites = Data.Sprites;
     if (prefix != "")
     {
@@ -45,23 +43,23 @@ async Task ExtractSprites(string folder, string prefix)
         }
     }
 
-    SetProgressBar(null, "Exporting sprites to GIF...", 0, sprites.Count);
+    SetProgressBar(null, "Exporting sprites as PNG frames...", 0, sprites.Count);
     StartProgressBarUpdater();
 
     bool isParallel = true;
-    await Task.Run(() => 
+    await Task.Run(() =>
     {
-        if (isParallel) 
+        if (isParallel)
         {
-            Parallel.ForEach(sprites, (sprite) => 
+            Parallel.ForEach(sprites, (sprite) =>
             {
                 IncrementProgressParallel();
                 ExtractSprite(sprite, folder, worker);
             });
-        } 
-        else 
+        }
+        else
         {
-            foreach (UndertaleSprite sprite in sprites) 
+            foreach (UndertaleSprite sprite in sprites)
             {
                 ExtractSprite(sprite, folder, worker);
                 IncrementProgressParallel();
@@ -72,44 +70,65 @@ async Task ExtractSprites(string folder, string prefix)
     HideProgressBar();
 }
 
-void ExtractSprite(UndertaleSprite sprite, string folder, TextureWorker worker)
+void ExtractSprite(UndertaleSprite sprite, string folder, TextureWorkerSkia worker)
 {
-    using MagickImageCollection gif = new();
+    string spriteFolder = Path.Join(folder, sprite.Name.Content);
+    var frameDelays = new List<int>();
     bool anyValidFrames = false;
+
     for (int picCount = 0; picCount < sprite.Textures.Count; picCount++)
     {
         if (sprite.Textures[picCount]?.Texture != null)
         {
-            IMagickImage<byte> image = worker.GetTextureFor(sprite.Textures[picCount].Texture, sprite.Name.Content + " (frame " + picCount + ")", true);
-            image.GifDisposeMethod = GifDisposeMethod.Previous;
-            // the animation delay unit seems to be 100 per second, not milliseconds (1000 per second)
+            using SKBitmap image = worker.GetTextureFor(sprite.Textures[picCount].Texture, sprite.Name.Content + " (frame " + picCount + ")", true);
+
+            if (!anyValidFrames)
+            {
+                Directory.CreateDirectory(spriteFolder);
+            }
+
+            string framePath = Path.Join(spriteFolder, "frame_" + picCount + ".png");
+            TextureWorkerSkia.SaveImageToFile(image, framePath);
+
+            // Calculate animation delay (in centiseconds, same unit as GIF)
+            int delay;
             if (sprite.IsSpecialType && Data.IsGameMaker2())
             {
                 if (sprite.GMS2PlaybackSpeed == 0f)
                 {
-                    image.AnimationDelay = 10;
+                    delay = 10;
                 }
                 else if (sprite.GMS2PlaybackSpeedType is AnimSpeedType.FramesPerGameFrame)
                 {
-                    image.AnimationDelay = (uint)Math.Max((int)(Math.Round(100f / (sprite.GMS2PlaybackSpeed * Data.GeneralInfo.GMS2FPS))), 1);
+                    delay = Math.Max((int)(Math.Round(100f / (sprite.GMS2PlaybackSpeed * Data.GeneralInfo.GMS2FPS))), 1);
                 }
                 else
                 {
-                    image.AnimationDelay = (uint)Math.Max((int)(Math.Round(100 / sprite.GMS2PlaybackSpeed)), 1);
+                    delay = Math.Max((int)(Math.Round(100 / sprite.GMS2PlaybackSpeed)), 1);
                 }
             }
             else
             {
-                image.AnimationDelay = 3; // 30fps
+                delay = 3; // 30fps
             }
-            gif.Add(image);
+            frameDelays.Add(delay);
             anyValidFrames = true;
         }
     }
+
     if (!anyValidFrames)
     {
         return;
     }
-    gif.Optimize();
-    gif.Write(Path.Join(folder, sprite.Name.Content + ".gif"));
+
+    // Write animation timing info
+    string infoPath = Path.Join(spriteFolder, "info.txt");
+    var sb = new StringBuilder();
+    sb.AppendLine("sprite=" + sprite.Name.Content);
+    sb.AppendLine("frames=" + frameDelays.Count);
+    for (int i = 0; i < frameDelays.Count; i++)
+    {
+        sb.AppendLine("frame_" + i + "_delay_cs=" + frameDelays[i]);
+    }
+    File.WriteAllText(infoPath, sb.ToString());
 }
