@@ -174,7 +174,14 @@ public partial class UndertaleCodeViewModel : IUndertaleResourceViewModel
         IsCodeProcessing = false;
 
         MainVM.IsEnabled = true;
-        lastFocusedElement?.Focus();
+
+        // Don't restore focus when using SoraEditor — the native Android editor
+        // manages its own focus. Calling Focus() here would steal focus from it.
+        if (View is UndertaleCodeView view && !view._useSoraEditor)
+        {
+            lastFocusedElement?.Focus();
+        }
+
         View?.RestoreCaretOffsets();
     }
 

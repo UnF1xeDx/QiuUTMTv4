@@ -19,31 +19,22 @@ set "ClassesDex=%ExecutePath%classes3.dex"
 call "%ExecutePath%prebuild_resources.bat"
 
 echo [1/6] Building UndertaleModToolAvalonia...
-msbuild "%ExecutePath%..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" /p:Configuration=Debug /p:Platform="Any CPU"
+dotnet build "%ExecutePath%..\UndertaleModToolAvalonia\UndertaleModToolAvalonia.csproj" -c Debug "-p:Platform=Any CPU"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to build UndertaleModToolAvalonia
     exit /b 1
 )
-
+dotnet restore "%ExecutePath%.."
 echo [2/6] Building Android project with fast deploy and collecting all assemblies...
 :: Restore NuGet packages for 64-bit Android ABIs (.NET 9 Android only supports arm64-v8a
 :: and x86_64; 32-bit runtimes linux-bionic-arm/linux-bionic-x86 do not exist on NuGet).
-msbuild "%AndroidProjectDir%\UndertaleModToolAvalonia.Android.csproj" ^
-    /t:Restore ^
-    /p:RuntimeIdentifiers="android-arm64;android-x64" ^
-    /p:AndroidSupportedAbis="arm64-v8a;x86_64"
+dotnet restore "%AndroidProjectDir%\UndertaleModToolAvalonia.Android.csproj"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to restore NuGet packages for Android ABIs
     exit /b 1
 )
 
-msbuild "%AndroidProjectDir%\UndertaleModToolAvalonia.Android.csproj" ^
-    /t:SignAndroidPackage ^
-    /p:Configuration=Debug ^
-    /p:Platform="Any CPU" ^
-    /p:AndroidUseSharedRuntime=true ^
-    /p:EmbedAssembliesIntoApk=false ^
-    /p:AndroidSupportedAbis="arm64-v8a;x86_64"
+dotnet msbuild "%AndroidProjectDir%\UndertaleModToolAvalonia.Android.csproj" /t:SignAndroidPackage /p:Configuration=Debug /p:Platform="Any CPU" /p:AndroidUseSharedRuntime=true /p:EmbedAssembliesIntoApk=false
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Failed to build Android project
     exit /b 1

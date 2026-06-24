@@ -76,7 +76,7 @@
                 <ThemeVariantScope RequestedThemeVariant="Dark">
                     <nativeViews:SoraEditorControl x:Name="GMLTextEditorSora"
                                                    Document="{Binding GMLTextDocument}"
-                                                   LostFocus="GMLTextEditor_LostFocus"
+
                                                    TextChanged="GMLTextEditor_TextChanged">
                     </nativeViews:SoraEditorControl>
                 </ThemeVariantScope>
@@ -85,7 +85,7 @@
                 <ThemeVariantScope RequestedThemeVariant="Dark">
                     <nativeViews:SoraEditorControl x:Name="ASMTextEditorSora"
                                                    Document="{Binding ASMTextDocument}"
-                                                   LostFocus="ASMTextEditor_LostFocus"
+
                                                    TextChanged="ASMTextEditor_TextChanged">
                     </nativeViews:SoraEditorControl>
                 </ThemeVariantScope>

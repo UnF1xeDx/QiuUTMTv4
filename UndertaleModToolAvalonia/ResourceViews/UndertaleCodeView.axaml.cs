@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -35,6 +35,8 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
     /// Whether SoraEditor is the active editor (based on user settings and platform).
     /// </summary>
     internal bool _useSoraEditor;
+
+    private bool _isSyncingSoraText;
 
     public UndertaleCodeView()
     {
@@ -113,9 +115,12 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
                     }
                 };
 
-                // Listen for overlay active state to hide/show SoraEditor native views
-                // (native views render on top of Avalonia controls on Android)
-                vm.MainVM.PropertyChanged += OnMainViewModelPropertyChanged;
+                // Sync Document text to SoraEditor when using SoraEditor
+                if (_useSoraEditor)
+                {
+                    vm.GMLTextDocument.TextChanged += OnGMLDocumentTextChanged;
+                    vm.ASMTextDocument.TextChanged += OnASMDocumentTextChanged;
+                }
             }
         };
 
@@ -151,23 +156,6 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
         // Word wrap and whitespace checkboxes
         WordWrapCheck.IsCheckedChanged += WordWrapCheck_Changed;
         ShowWhitespaceCheck.IsCheckedChanged += ShowWhitespaceCheck_Changed;
-    }
-
-    private void OnMainViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(MainViewModel.IsOverlayActive))
-        {
-            // When overlay is active, hide SoraEditor native views so they don't render on top of the overlay
-            if (DataContext is UndertaleCodeViewModel vm)
-            {
-                bool overlayActive = vm.MainVM.IsOverlayActive;
-                if (_useSoraEditor)
-                {
-                    // Hide/show the SoraEditor TabControl to remove native views from rendering
-                    SoraEditorTabControl.IsVisible = !overlayActive && vm.Code.ParentEntry is null;
-                }
-            }
-        }
     }
 
     static IHighlightingDefinition LoadHighlightingDefinition(string name)
@@ -367,6 +355,7 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
     private void GMLTextEditor_TextChanged(object? sender, EventArgs e)
     {
+        if (_isSyncingSoraText) return;
         if (DataContext is UndertaleCodeViewModel vm)
         {
             vm.GMLOutdated = true;
@@ -375,9 +364,54 @@ public partial class UndertaleCodeView : UserControl, IUndertaleCodeView
 
     private void ASMTextEditor_TextChanged(object? sender, EventArgs e)
     {
+        if (_isSyncingSoraText) return;
         if (DataContext is UndertaleCodeViewModel vm)
         {
             vm.ASMOutdated = true;
+        }
+    }
+
+    private void OnGMLDocumentTextChanged(object? sender, EventArgs e)
+    {
+        if (!_useSoraEditor || _isSyncingSoraText) return;
+        if (DataContext is UndertaleCodeViewModel vm)
+        {
+            _isSyncingSoraText = true;
+            try
+            {
+                var currentText = GMLTextEditorSora.Text;
+                var docText = vm.GMLTextDocument.Text;
+                if (currentText != docText)
+                {
+                    GMLTextEditorSora.Text = docText;
+                }
+            }
+            finally
+            {
+                _isSyncingSoraText = false;
+            }
+        }
+    }
+
+    private void OnASMDocumentTextChanged(object? sender, EventArgs e)
+    {
+        if (!_useSoraEditor || _isSyncingSoraText) return;
+        if (DataContext is UndertaleCodeViewModel vm)
+        {
+            _isSyncingSoraText = true;
+            try
+            {
+                var currentText = ASMTextEditorSora.Text;
+                var docText = vm.ASMTextDocument.Text;
+                if (currentText != docText)
+                {
+                    ASMTextEditorSora.Text = docText;
+                }
+            }
+            finally
+            {
+                _isSyncingSoraText = false;
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ if (exportFolder is null)
 SetProgressBar(null, "Rooms Exported", 0, Data.Rooms.Count);
 StartProgressBarUpdater();
 
-using TextureWorkerSkia worker = new();
+using TextureWorkerSkia worker = new TextureWorkerSkia();
 
 foreach (UndertaleRoom room in Data.Rooms)
 {
